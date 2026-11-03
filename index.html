@@ -1,0 +1,4616 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1419" />
+  <title>Таксометр Смен — Учёт работы таксиста</title>
+  <meta name="description" content="Офлайн-приложение для учёта рабочих смен, интервалов времени, доходов, расходов и аналитики прибыли водителя такси." />
+  <meta property="og:title" content="Таксометр Смен — Учёт работы таксиста" />
+  <meta property="og:description" content="Офлайн-приложение для учёта рабочих смен, интервалов времени, доходов, расходов и аналитики прибыли водителя такси." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    :root {
+      --bg-main: #0f1419;
+      --bg-card: #1a2028;
+      --bg-input: #12171e;
+      --bg-elevated: #232b36;
+      --bg-hover: #28313e;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-main: #e6e6e6;
+      --text-muted: #8b95a3;
+      --accent-yellow: #ffd43b;
+      --accent-yellow-hover: #fcc419;
+      --accent-yellow-soft: rgba(255, 212, 59, 0.13);
+      --accent-green: #51cf66;
+      --accent-green-soft: rgba(81, 207, 102, 0.13);
+      --accent-red: #ff6b6b;
+      --accent-red-soft: rgba(255, 107, 107, 0.13);
+      --radius-card: 16px;
+      --radius-control: 12px;
+      --radius-sm: 8px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --transition-fast: 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: 16px;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      color-scheme: dark;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+      overflow-x: hidden;
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding-bottom: 36px;
+      }
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--accent-yellow);
+      outline-offset: 2px;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Top Navigation Bar (Strict 3-zone contract) */
+    .top-bar {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-subtle);
+      height: 58px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        padding: 0 28px;
+        background-color: rgba(26, 32, 40, 0.92);
+        backdrop-filter: blur(12px);
+      }
+    }
+
+    .brand-mark {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--accent-yellow);
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+
+    .desktop-nav {
+      display: none;
+      align-items: center;
+      gap: 24px;
+      height: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .desktop-nav {
+        display: flex;
+      }
+    }
+
+    .desktop-nav-btn {
+      height: 100%;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 4px;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+      position: relative;
+      transition: color var(--transition-fast);
+    }
+
+    .desktop-nav-btn:hover {
+      color: var(--text-main);
+    }
+
+    .desktop-nav-btn.active {
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+
+    .desktop-nav-btn.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background-color: var(--accent-yellow);
+    }
+
+    .top-action-btn {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .top-action-btn:hover {
+      background-color: var(--bg-hover);
+      border-color: var(--border-strong);
+    }
+
+    /* Mobile Bottom Tab Navigation (<= 15% sticky budget) */
+    .mobile-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 35;
+      background-color: rgba(26, 32, 40, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-subtle);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (min-width: 768px) {
+      .mobile-bottom-nav {
+        display: none;
+      }
+    }
+
+    .mobile-tab-btn {
+      min-height: 58px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .mobile-tab-btn:active {
+      transform: scale(0.96);
+    }
+
+    .mobile-tab-btn svg {
+      width: 21px;
+      height: 21px;
+      stroke-width: 2;
+    }
+
+    .mobile-tab-btn.active {
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+
+    /* Main Container */
+    .app-container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .app-container {
+        padding: 28px;
+      }
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadePanel 160ms ease-out;
+    }
+
+    @keyframes fadePanel {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tab-panel.active {
+        animation: none;
+      }
+    }
+
+    /* Section Headings */
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+      font-weight: 700;
+      color: var(--text-main);
+      text-wrap: balance;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Cards (Single elevation depth, zero nested card borders) */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 18px;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 22px;
+      }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-yellow);
+    }
+
+    .card-meta {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* Shift Tab Grid Layout */
+    .shift-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (min-width: 980px) {
+      .shift-grid {
+        grid-template-columns: minmax(0, 1.55fr) minmax(330px, 1fr);
+        gap: 24px;
+      }
+    }
+
+    .shift-main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .shift-side-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 980px) {
+      .shift-side-col {
+        position: sticky;
+        top: 82px;
+      }
+    }
+
+    /* Editing Banner */
+    .edit-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background-color: var(--accent-yellow-soft);
+      border: 1px solid rgba(255, 212, 59, 0.35);
+      border-radius: var(--radius-control);
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+    }
+
+    .edit-banner.visible {
+      display: flex;
+    }
+
+    .edit-banner-text {
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+
+    .btn-text-action {
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      background-color: rgba(15, 20, 25, 0.55);
+      color: var(--text-main);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Form Controls */
+    .fields-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 520px) {
+      .fields-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .fields-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (min-width: 560px) {
+      .fields-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-input,
+    .picker-trigger {
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 14px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-variant-numeric: tabular-nums;
+      transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .form-input::placeholder {
+      color: rgba(139, 149, 163, 0.55);
+    }
+
+    .form-input:hover,
+    .picker-trigger:hover {
+      border-color: var(--border-strong);
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-yellow);
+      outline: none;
+    }
+
+    .form-input.has-suffix {
+      padding-right: 38px;
+    }
+
+    .form-input.has-suffix-wide {
+      padding-right: 54px;
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 14px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .form-textarea {
+      width: 100%;
+      min-height: 76px;
+      padding: 12px 14px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      color: var(--text-main);
+      font-size: 0.9375rem;
+      resize: vertical;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-textarea:focus {
+      border-color: var(--accent-yellow);
+      outline: none;
+    }
+
+    /* Picker Trigger Button */
+    .picker-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .picker-trigger svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .picker-trigger.empty-val {
+      color: var(--text-muted);
+    }
+
+    /* Work Intervals List */
+    .intervals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .interval-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    @media (max-width: 440px) {
+      .interval-row {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+      }
+      .interval-duration {
+        grid-column: 1 / -1;
+        justify-self: start;
+        padding-top: 2px;
+      }
+    }
+
+    .interval-sep {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      user-select: none;
+    }
+
+    .interval-duration {
+      min-width: 68px;
+      text-align: right;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .interval-duration .overnight-note {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 400;
+      color: var(--accent-yellow);
+    }
+
+    /* Dynamic Expenses Section */
+    .presets-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .preset-btn {
+      min-height: 44px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .preset-btn:hover {
+      background-color: var(--bg-hover);
+      border-color: var(--accent-yellow);
+    }
+
+    .preset-btn:active {
+      transform: scale(0.97);
+    }
+
+    .expenses-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .expense-empty {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .expense-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(105px, 0.9fr) 44px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-icon-remove {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      background-color: transparent;
+      border: 1px solid transparent;
+      transition: color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .btn-icon-remove:hover {
+      color: var(--accent-red);
+      background-color: var(--accent-red-soft);
+    }
+
+    .btn-secondary-add {
+      width: 100%;
+      min-height: 46px;
+      padding: 8px 16px;
+      border-radius: var(--radius-control);
+      background-color: var(--bg-input);
+      border: 1px dashed var(--border-strong);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .btn-secondary-add:hover {
+      border-color: var(--accent-yellow);
+      color: var(--accent-yellow);
+      background-color: var(--accent-yellow-soft);
+    }
+
+    /* Live Preview Card */
+    .preview-hero {
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .preview-hero-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .preview-hero-value {
+      font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
+    }
+
+    .preview-formula {
+      margin-top: 6px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .commission-inline-bar {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .commission-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .commission-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .commission-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .commission-pct-box {
+      width: 128px;
+      flex-shrink: 0;
+    }
+
+    .preview-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .preview-stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .preview-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .preview-stat-val {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .val-pos {
+      color: var(--accent-green);
+    }
+
+    .val-neg {
+      color: var(--accent-red);
+    }
+
+    .val-yellow {
+      color: var(--accent-yellow);
+    }
+
+    /* Primary & Secondary CTA Buttons */
+    .btn-primary {
+      width: 100%;
+      min-height: 50px;
+      padding: 12px 20px;
+      border-radius: var(--radius-control);
+      background-color: var(--accent-yellow);
+      color: #0f1419;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: background-color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-yellow-hover);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.985);
+    }
+
+    .btn-subtle {
+      min-height: 44px;
+      padding: 8px 16px;
+      border-radius: var(--radius-control);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .btn-subtle:hover {
+      background-color: var(--bg-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn-danger-subtle {
+      color: var(--accent-red);
+      border-color: rgba(255, 107, 107, 0.28);
+    }
+
+    .btn-danger-subtle:hover {
+      background-color: var(--accent-red-soft);
+      border-color: var(--accent-red);
+    }
+
+    .preview-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* History Tab */
+    .history-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .history-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+      flex: 1 1 320px;
+    }
+
+    .filter-date-box {
+      min-width: 155px;
+      flex: 1 1 155px;
+      max-width: 220px;
+    }
+
+    .history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .history-summary-line {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .shifts-table {
+      width: 100%;
+      min-width: 780px;
+      border-collapse: collapse;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shifts-table th {
+      padding: 13px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      background-color: rgba(18, 23, 30, 0.55);
+      white-space: nowrap;
+    }
+
+    .shifts-table th.align-right,
+    .shifts-table td.align-right {
+      text-align: right;
+    }
+
+    .shifts-table td {
+      padding: 14px 16px;
+      font-size: 0.9375rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .shifts-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .shifts-table tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .cell-main {
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .cell-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .expense-toggle-btn {
+      min-height: 34px;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      border-radius: var(--radius-sm);
+      color: var(--accent-red);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: background-color var(--transition-fast);
+    }
+
+    .expense-toggle-btn:hover {
+      background-color: var(--accent-red-soft);
+    }
+
+    .expense-details-list {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      min-width: 170px;
+    }
+
+    .expense-details-list.open {
+      display: block;
+    }
+
+    .expense-detail-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 0;
+    }
+
+    .row-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .row-action-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .row-action-btn:hover {
+      color: var(--text-main);
+      background-color: var(--bg-elevated);
+    }
+
+    .row-action-btn.delete:hover {
+      color: var(--accent-red);
+      background-color: var(--accent-red-soft);
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 44px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .empty-state-title {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .empty-state-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      max-width: 420px;
+      margin-bottom: 8px;
+    }
+
+    /* Analytics Tab */
+    .period-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .segmented-control {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+    }
+
+    .seg-btn {
+      min-height: 40px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .seg-btn:hover {
+      color: var(--text-main);
+    }
+
+    .seg-btn.active {
+      background-color: var(--accent-yellow);
+      color: #0f1419;
+    }
+
+    .custom-range-row {
+      display: none;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .custom-range-row.visible {
+      display: flex;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+      }
+    }
+
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    @media (max-width: 639px) {
+      .kpi-card.span-2-mobile {
+        grid-column: span 2;
+      }
+    }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 960px) {
+      .charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .chart-card.full-span {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .chart-readout {
+      min-height: 22px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      position: relative;
+    }
+
+    .canvas-wrap canvas {
+      display: block;
+      width: 100%;
+      touch-action: pan-y;
+    }
+
+    /* Settings Tab */
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: 880px;
+    }
+
+    .settings-note {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      line-height: 1.55;
+    }
+
+    .settings-fuel-hint {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .settings-actions .btn-primary {
+      width: auto;
+      min-width: 210px;
+    }
+
+    .data-tools-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    /* Custom Modal / Bottom Sheet Pickers */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background-color: rgba(8, 11, 15, 0.72);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    @media (min-width: 600px) {
+      .modal-backdrop {
+        align-items: center;
+        padding: 20px;
+      }
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 400px;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 22px 22px 0 0;
+      padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+      animation: sheetUp 170ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (min-width: 600px) {
+      .modal-sheet {
+        border-radius: 20px;
+        padding: 20px;
+      }
+    }
+
+    @keyframes sheetUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: var(--border-strong);
+      margin: 0 auto 14px;
+    }
+
+    @media (min-width: 600px) {
+      .sheet-handle {
+        display: none;
+      }
+    }
+
+    .picker-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .picker-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .picker-quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .picker-quick-btn {
+      min-height: 36px;
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .picker-quick-btn:hover {
+      border-color: var(--accent-yellow);
+      color: var(--accent-yellow);
+    }
+
+    /* Calendar Grid */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .cal-month-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent-yellow);
+    }
+
+    .cal-nav-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+    }
+
+    .cal-nav-btn:hover {
+      background-color: var(--bg-elevated);
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-day-btn {
+      height: 44px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      color: var(--text-main);
+      transition: background-color var(--transition-fast);
+    }
+
+    .cal-day-btn:hover:not(:disabled) {
+      background-color: var(--bg-elevated);
+    }
+
+    .cal-day-btn.other-month {
+      color: rgba(139, 149, 163, 0.35);
+    }
+
+    .cal-day-btn.is-today {
+      border: 1px solid rgba(255, 212, 59, 0.55);
+    }
+
+    .cal-day-btn.is-selected {
+      background-color: var(--accent-yellow);
+      color: #0f1419;
+      font-weight: 700;
+    }
+
+    .cal-day-btn.has-shift::after {
+      content: "";
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+      position: absolute;
+      bottom: 5px;
+    }
+
+    .cal-day-btn.is-selected.has-shift::after {
+      background-color: #0f1419;
+    }
+
+    /* Custom Time Picker */
+    .time-Readout-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent-yellow);
+    }
+
+    .time-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .time-col-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .time-col-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .time-scroll-list {
+      height: 204px;
+      overflow-y: auto;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg-elevated) transparent;
+    }
+
+    .time-opt-btn {
+      min-height: 40px;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .time-opt-btn:hover {
+      background-color: var(--bg-elevated);
+    }
+
+    .time-opt-btn.selected {
+      background-color: var(--accent-yellow);
+      color: #0f1419;
+      font-weight: 700;
+    }
+
+    /* Confirmation Dialog */
+    .confirm-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
+    .confirm-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-danger-solid {
+      min-height: 46px;
+      border-radius: var(--radius-control);
+      background-color: var(--accent-red);
+      color: #0f1419;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      left: 50%;
+      bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      z-index: 80;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+    }
+
+    @media (min-width: 768px) {
+      .toast-container {
+        bottom: 24px;
+      }
+    }
+
+    .toast {
+      padding: 11px 18px;
+      border-radius: var(--radius-control);
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      animation: toastIn 160ms ease-out;
+    }
+
+    .toast.success {
+      border-color: rgba(81, 207, 102, 0.5);
+    }
+
+    .toast.warn {
+      border-color: rgba(255, 212, 59, 0.5);
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar (Strict 3-zone contract) -->
+  <header class="top-bar">
+    <a href="#shift" class="brand-mark" id="brand-link">Таксометр Смен</a>
+
+    <nav class="desktop-nav" aria-label="Основная навигация">
+      <button type="button" class="desktop-nav-btn active" data-tab="shift">Смена</button>
+      <button type="button" class="desktop-nav-btn" data-tab="history">История</button>
+      <button type="button" class="desktop-nav-btn" data-tab="analytics">Анализ</button>
+      <button type="button" class="desktop-nav-btn" data-tab="settings">Настройки</button>
+    </nav>
+
+    <button type="button" class="top-action-btn" id="top-quick-action">Экспорт CSV</button>
+  </header>
+
+  <main class="app-container">
+
+    <!-- ==================== TAB 1: СМЕНА ==================== -->
+    <section id="panel-shift" class="tab-panel active" aria-labelledby="title-shift">
+      <div class="page-header">
+        <h1 class="page-title" id="title-shift">Учёт рабочей смены</h1>
+        <span class="page-subtitle" id="shift-today-hint">Все расчёты сохраняются локально на устройстве</span>
+      </div>
+
+      <div class="edit-banner" id="edit-mode-banner">
+        <span class="edit-banner-text" id="edit-banner-label">Редактирование смены</span>
+        <button type="button" class="btn-text-action" id="cancel-edit-btn">Отменить</button>
+      </div>
+
+      <form id="shift-form" novalidate>
+        <div class="shift-grid">
+          <!-- Left / Main Column -->
+          <div class="shift-main-col">
+
+            <!-- Card: Core Income & Mileage -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Основные данные</h2>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="shift-date-btn">Дата смены</label>
+                <button type="button" class="picker-trigger num" id="shift-date-btn" aria-haspopup="dialog">
+                  <span id="shift-date-text">—</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="fields-grid-3">
+                <div class="field-group">
+                  <label class="field-label" for="input-gross">Доход</label>
+                  <div class="input-wrap">
+                    <input type="text" inputmode="decimal" autocomplete="off" id="input-gross" class="form-input has-suffix num" placeholder="0" />
+                    <span class="input-suffix">₽</span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="input-tips">Чаевые (без комиссии)</label>
+                  <div class="input-wrap">
+                    <input type="text" inputmode="decimal" autocomplete="off" id="input-tips" class="form-input has-suffix num" placeholder="0" />
+                    <span class="input-suffix">₽</span>
+                  </div>
+                </div>
+
+                <div class="field-group">
+                  <label class="field-label" for="input-mileage">Пробег</label>
+                  <div class="input-wrap">
+                    <input type="text" inputmode="decimal" autocomplete="off" id="input-mileage" class="form-input has-suffix num" placeholder="0" />
+                    <span class="input-suffix">км</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="commission-inline-bar">
+                <div class="commission-info">
+                  <span class="commission-title">Комиссия только с «Доход»</span>
+                  <span class="commission-sub" id="gross-commission-caption">Удержание с дохода: 0 ₽ · чаевые без комиссии</span>
+                </div>
+                <div class="input-wrap commission-pct-box">
+                  <input type="text" inputmode="decimal" autocomplete="off" id="input-commission-pct" class="form-input has-suffix num" aria-label="Процент комиссии с дохода" placeholder="22" />
+                  <span class="input-suffix">%</span>
+                </div>
+              </div>
+
+              <div class="commission-inline-bar">
+                <div class="commission-info">
+                  <span class="commission-title">Амортизация с пробега</span>
+                  <span class="commission-sub" id="depreciation-caption">Начислено: 0 ₽ · пробег × ставка из настроек</span>
+                </div>
+                <div class="input-wrap commission-pct-box">
+                  <input type="text" inputmode="decimal" autocomplete="off" id="input-depreciation-rate" class="form-input has-suffix-wide num" aria-label="Ставка амортизации за километр" placeholder="4.5" />
+                  <span class="input-suffix">₽/км</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card: Work Intervals -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Интервалы работы</h2>
+                <span class="card-meta" id="intervals-total-badge">0 ч</span>
+              </div>
+
+              <div class="intervals-list" id="intervals-container"></div>
+
+              <button type="button" class="btn-secondary-add" id="add-interval-btn">
+                + Добавить интервал времени
+              </button>
+            </div>
+
+            <!-- Card: Dynamic Expenses -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Расходы</h2>
+                <span class="card-meta val-neg" id="expenses-total-badge">0 ₽</span>
+              </div>
+
+              <p class="presets-label">Быстрое добавление расхода:</p>
+              <div class="presets-row">
+                <button type="button" class="preset-btn" data-preset="gas">+ Заправка газ</button>
+                <button type="button" class="preset-btn" data-preset="petrol">+ Заправка бензин</button>
+                <button type="button" class="preset-btn" data-preset="wash">+ Мойка</button>
+              </div>
+
+              <div class="expenses-list" id="expenses-container"></div>
+
+              <button type="button" class="btn-secondary-add" id="add-custom-expense-btn">
+                + Свой расход
+              </button>
+            </div>
+
+            <!-- Card: Notes -->
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Заметки</h2>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="input-notes">Комментарий к смене (необязательно)</label>
+                <textarea id="input-notes" class="form-textarea" rows="2" placeholder="Тарифы, коэффициенты, погода, мойка или обслуживание..."></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right / Live Preview Column -->
+          <div class="shift-side-col">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Итог смены</h2>
+              </div>
+
+              <div class="preview-hero">
+                <div class="preview-hero-label">Чистая прибыль</div>
+                <div class="preview-hero-value num" id="preview-net">0 ₽</div>
+                <div class="preview-formula" id="preview-formula">Доход 0 ₽ − Комиссия 0 ₽ − Амортизация 0 ₽ − Расходы 0 ₽</div>
+              </div>
+
+              <div class="preview-stats-grid">
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">Итого часов</span>
+                  <span class="preview-stat-val num" id="preview-hours">0 ч</span>
+                </div>
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">В час</span>
+                  <span class="preview-stat-val num" id="preview-hourly">0 ₽/ч</span>
+                </div>
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">Комиссия (с дохода)</span>
+                  <span class="preview-stat-val num val-neg" id="preview-commission">0 ₽</span>
+                </div>
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">Амортизация</span>
+                  <span class="preview-stat-val num val-neg" id="preview-depreciation">0 ₽</span>
+                </div>
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">Расходы по списку</span>
+                  <span class="preview-stat-val num val-neg" id="preview-expenses">0 ₽</span>
+                </div>
+                <div class="preview-stat-item">
+                  <span class="preview-stat-label">Итого расходов</span>
+                  <span class="preview-stat-val num val-neg" id="preview-total-expenses">0 ₽</span>
+                </div>
+              </div>
+
+              <div class="preview-actions">
+                <button type="submit" class="btn-primary" id="save-shift-btn">Сохранить смену</button>
+                <button type="button" class="btn-subtle" id="reset-shift-btn">Очистить форму</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== TAB 2: ИСТОРИЯ ==================== -->
+    <section id="panel-history" class="tab-panel" aria-labelledby="title-history">
+      <div class="page-header">
+        <h1 class="page-title" id="title-history">История смен</h1>
+        <span class="page-subtitle">Нажмите на сумму расходов в строке, чтобы раскрыть детализацию</span>
+      </div>
+
+      <div class="history-toolbar">
+        <div class="history-filters">
+          <div class="field-group filter-date-box">
+            <label class="field-label" for="filter-from-btn">Период от</label>
+            <button type="button" class="picker-trigger num empty-val" id="filter-from-btn">
+              <span id="filter-from-text">Все даты</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="field-group filter-date-box">
+            <label class="field-label" for="filter-to-btn">Период до</label>
+            <button type="button" class="picker-trigger num empty-val" id="filter-to-btn">
+              <span id="filter-to-text">Все даты</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+          </div>
+
+          <button type="button" class="btn-subtle" id="clear-history-filter-btn" hidden>Сбросить фильтр</button>
+        </div>
+
+        <div class="history-actions">
+          <button type="button" class="btn-subtle" id="export-csv-btn">Экспорт в CSV</button>
+        </div>
+      </div>
+
+      <div class="history-summary-line" id="history-summary-line"></div>
+
+      <div class="card table-card">
+        <div class="table-scroll" id="history-table-wrap">
+          <table class="shifts-table" id="history-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th class="align-right">Часы</th>
+                <th class="align-right">Доход (+чаевые)</th>
+                <th class="align-right">Пробег</th>
+                <th class="align-right">Расходы</th>
+                <th class="align-right">Чистыми</th>
+                <th class="align-right">₽/час</th>
+                <th class="align-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state" id="history-empty" hidden>
+          <div class="empty-state-title">Нет сохранённых смен за выбранный период</div>
+          <p class="empty-state-desc">Добавьте рабочую смену во вкладке «Смена» или измените диапазон фильтра дат.</p>
+          <button type="button" class="btn-subtle" id="empty-go-shift-btn">Перейти к добавлению смены</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: АНАЛИЗ ==================== -->
+    <section id="panel-analytics" class="tab-panel" aria-labelledby="title-analytics">
+      <div class="page-header">
+        <h1 class="page-title" id="title-analytics">Аналитика и графики</h1>
+        <span class="page-subtitle" id="analytics-range-caption">Сводка эффективности работы</span>
+      </div>
+
+      <div class="period-bar">
+        <div class="segmented-control" role="group" aria-label="Период анализа">
+          <button type="button" class="seg-btn active" data-period="all">Всё время</button>
+          <button type="button" class="seg-btn" data-period="7d">7 дней</button>
+          <button type="button" class="seg-btn" data-period="30d">30 дней</button>
+          <button type="button" class="seg-btn" data-period="custom">Свой период</button>
+        </div>
+
+        <div class="custom-range-row" id="analytics-custom-range">
+          <div class="field-group filter-date-box">
+            <label class="field-label" for="analytics-from-btn">От</label>
+            <button type="button" class="picker-trigger num empty-val" id="analytics-from-btn">
+              <span id="analytics-from-text">Начало</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="field-group filter-date-box">
+            <label class="field-label" for="analytics-to-btn">До</label>
+            <button type="button" class="picker-trigger num empty-val" id="analytics-to-btn">
+              <span id="analytics-to-text">Конец</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 KPI Stat Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">Количество смен</span>
+          <span class="kpi-value num" id="kpi-shifts">0</span>
+          <span class="kpi-sub" id="kpi-mileage-sub">Пробег: 0 км</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Всего часов</span>
+          <span class="kpi-value num" id="kpi-hours">0 ч</span>
+          <span class="kpi-sub" id="kpi-hours-sub">В среднем: 0 ч/смена</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Средняя выручка / день</span>
+          <span class="kpi-value num" id="kpi-avg-rev">0 ₽</span>
+          <span class="kpi-sub" id="kpi-rev-sub">Доход + чаевые</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Общая чистая прибыль</span>
+          <span class="kpi-value num" id="kpi-net-total">0 ₽</span>
+          <span class="kpi-sub" id="kpi-exp-sub">Расходы: 0 ₽</span>
+        </div>
+        <div class="kpi-card span-2-mobile">
+          <span class="kpi-label">Средний заработок в час</span>
+          <span class="kpi-value num val-yellow" id="kpi-hourly-avg">0 ₽/ч</span>
+          <span class="kpi-sub" id="kpi-km-net-sub">Чистыми на км: 0 ₽/км</span>
+        </div>
+      </div>
+
+      <!-- 3 Canvas Charts -->
+      <div class="charts-grid">
+        <!-- Chart 1: Daily Dynamics -->
+        <div class="card chart-card full-span">
+          <div class="card-header">
+            <h2 class="card-title">Динамика по дням</h2>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-swatch" style="background:#3d4959"></span>Доход</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#51cf66"></span>Чистая прибыль</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span>Убыток</span>
+            </div>
+          </div>
+          <div class="chart-readout" id="readout-daily">Наведите или нажмите на столбец для просмотра точных сумм за день</div>
+          <div class="canvas-wrap">
+            <canvas id="chart-daily" height="270"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Weekday Efficiency -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h2 class="card-title">Эффективность по дням недели</h2>
+            <span class="card-meta" id="best-weekday-label">—</span>
+          </div>
+          <div class="chart-readout" id="readout-weekdays">Средняя чистая прибыль за смену по дням недели</div>
+          <div class="canvas-wrap">
+            <canvas id="chart-weekdays" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 3: Expense Structure -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h2 class="card-title">Структура расходов</h2>
+            <span class="card-meta val-neg" id="total-exp-chart-label">0 ₽</span>
+          </div>
+          <div class="chart-readout" id="readout-expenses">Топ категорий расходов за выбранный период</div>
+          <div class="canvas-wrap">
+            <canvas id="chart-expenses" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: НАСТРОЙКИ ==================== -->
+    <section id="panel-settings" class="tab-panel" aria-labelledby="title-settings">
+      <div class="page-header">
+        <h1 class="page-title" id="title-settings">Настройки по умолчанию</h1>
+        <span class="page-subtitle">Комиссия с дохода и ставка амортизации для новых смен</span>
+      </div>
+
+      <div class="settings-layout">
+        <form class="card" id="settings-form" novalidate>
+          <div class="card-header">
+            <h2 class="card-title">Комиссия и амортизация</h2>
+          </div>
+
+          <p class="settings-note">
+            Комиссия рассчитывается автоматически и снимается только с поля «Доход» (чаевые комиссией не облагаются). Амортизация рассчитывается автоматически от пробега за смену (пробег × ₽/км). Изменение настроек применяется к новым сменам и не затрагивает сохранённые записи.
+          </p>
+
+          <div class="fields-grid-2">
+            <div class="field-group">
+              <label class="field-label" for="set-commission">Комиссия с «Доход» (%)</label>
+              <div class="input-wrap">
+                <input type="text" inputmode="decimal" id="set-commission" class="form-input has-suffix num" placeholder="22" />
+                <span class="input-suffix">%</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="set-depreciation">Амортизация (₽/км)</label>
+              <div class="input-wrap">
+                <input type="text" inputmode="decimal" id="set-depreciation" class="form-input has-suffix-wide num" placeholder="4.5" />
+                <span class="input-suffix">₽/км</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-fuel-hint" id="settings-fuel-hint">
+            Заправки (газ, бензин) и мойка добавляются по фактическому чеку в списке расходов во вкладке «Смена».
+          </div>
+
+          <div class="settings-actions">
+            <button type="submit" class="btn-primary">Сохранить настройки</button>
+            <button type="button" class="btn-subtle" id="reset-defaults-btn">Стандартные значения</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Резервное копирование и данные</h2>
+          </div>
+          <p class="settings-note">
+            Все смены хранятся офлайн в браузере (localStorage). Вы можете сохранить резервную копию базы в JSON, загрузить её на другом устройстве или очистить журнал.
+          </p>
+          <div class="data-tools-grid">
+            <button type="button" class="btn-subtle" id="download-html-btn">Скачать index.html</button>
+            <button type="button" class="btn-subtle" id="backup-export-btn">Скачать базу JSON</button>
+            <button type="button" class="btn-subtle" id="backup-import-btn">Загрузить из JSON</button>
+            <input type="file" id="backup-file-input" accept=".json,application/json" hidden />
+            <button type="button" class="btn-subtle" id="seed-demo-btn">Добавить демо-смены</button>
+            <button type="button" class="btn-subtle btn-danger-subtle" id="clear-all-shifts-btn">Очистить все смены</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Tab Bar -->
+  <nav class="mobile-bottom-nav" aria-label="Мобильная навигация">
+    <button type="button" class="mobile-tab-btn active" data-tab="shift">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
+      <span>Смена</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-tab="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      <span>История</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-tab="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      <span>Анализ</span>
+    </button>
+    <button type="button" class="mobile-tab-btn" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Настройки</span>
+    </button>
+  </nav>
+
+  <!-- ==================== CUSTOM DATE PICKER MODAL ==================== -->
+  <div class="modal-backdrop" id="date-picker-modal" role="dialog" aria-modal="true" aria-labelledby="dp-title">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="picker-top-row">
+        <span class="picker-title" id="dp-title">Выберите дату</span>
+        <button type="button" class="btn-icon-remove" id="dp-close-btn" aria-label="Закрыть">✕</button>
+      </div>
+
+      <div class="picker-quick-row">
+        <button type="button" class="picker-quick-btn" id="dp-today-btn">Сегодня</button>
+        <button type="button" class="picker-quick-btn" id="dp-yesterday-btn">Вчера</button>
+        <button type="button" class="picker-quick-btn" id="dp-clear-btn" hidden>Сбросить дату</button>
+      </div>
+
+      <div class="cal-nav">
+        <button type="button" class="cal-nav-btn" id="cal-prev-btn" aria-label="Предыдущий месяц">‹</button>
+        <span class="cal-month-label" id="cal-month-label">Ноябрь 2026</span>
+        <button type="button" class="cal-nav-btn" id="cal-next-btn" aria-label="Следующий месяц">›</button>
+      </div>
+
+      <div class="cal-weekdays">
+        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+      </div>
+      <div class="cal-days" id="cal-days-grid"></div>
+    </div>
+  </div>
+
+  <!-- ==================== CUSTOM TIME PICKER MODAL ==================== -->
+  <div class="modal-backdrop" id="time-picker-modal" role="dialog" aria-modal="true" aria-labelledby="tp-title">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="picker-top-row">
+        <span class="picker-title" id="tp-title">Выберите время</span>
+        <button type="button" class="btn-icon-remove" id="tp-close-btn" aria-label="Закрыть">✕</button>
+      </div>
+
+      <div class="time-Readout-box" id="tp-display">09:00</div>
+
+      <div class="picker-quick-row" id="tp-presets-row">
+        <button type="button" class="picker-quick-btn" data-quick-time="now">Сейчас</button>
+        <button type="button" class="picker-quick-btn" data-quick-time="08:00">08:00</button>
+        <button type="button" class="picker-quick-btn" data-quick-time="12:00">12:00</button>
+        <button type="button" class="picker-quick-btn" data-quick-time="18:00">18:00</button>
+        <button type="button" class="picker-quick-btn" data-quick-time="22:00">22:00</button>
+        <button type="button" class="picker-quick-btn" data-quick-time="00:00">00:00</button>
+      </div>
+
+      <div class="time-columns">
+        <div class="time-col-wrap">
+          <span class="time-col-label">Часы (00–23)</span>
+          <div class="time-scroll-list" id="tp-hours-list"></div>
+        </div>
+        <div class="time-col-wrap">
+          <span class="time-col-label">Минуты (00–59)</span>
+          <div class="time-scroll-list" id="tp-minutes-list"></div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary" id="tp-apply-btn">Применить время</button>
+    </div>
+  </div>
+
+  <!-- ==================== CONFIRMATION MODAL ==================== -->
+  <div class="modal-backdrop" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="picker-top-row">
+        <span class="picker-title" id="confirm-title">Подтверждение</span>
+        <button type="button" class="btn-icon-remove" id="confirm-close-btn" aria-label="Закрыть">✕</button>
+      </div>
+      <p class="confirm-desc" id="confirm-desc"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn-subtle" id="confirm-cancel-btn">Отмена</button>
+        <button type="button" class="btn-danger-solid" id="confirm-ok-btn">Удалить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ==================== STORAGE KEYS & DEFAULTS ==================== */
+      var STORAGE_SHIFTS = 'taxi_tracker_shifts_v1';
+      var STORAGE_SETTINGS = 'taxi_tracker_settings_v1';
+      var STORAGE_INIT_FLAG = 'taxi_tracker_seeded_v1';
+      var STORAGE_MIGRATED_V3 = 'taxi_tracker_migrated_v3';
+
+      var DEFAULT_SETTINGS = {
+        commissionPct: 22,
+        depreciationPerKm: 4.5
+      };
+
+      var MONTHS_RU = [
+        'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+      ];
+      var MONTHS_GEN_RU = [
+        'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
+        'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
+      ];
+      var WEEKDAYS_SHORT_MON = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+      var WEEKDAYS_FULL_MON = [
+        'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'
+      ];
+
+      /* ==================== UTILITY HELPERS ==================== */
+      function pad2(n) {
+        return n < 10 ? '0' + n : String(n);
+      }
+
+      function getLocalISODate(dateObj) {
+        var d = dateObj || new Date();
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+      }
+
+      function addDaysISO(isoDate, deltaDays) {
+        var parts = isoDate.split('-');
+        var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        d.setDate(d.getDate() + deltaDays);
+        return getLocalISODate(d);
+      }
+
+      function parseISODate(isoDate) {
+        if (!isoDate) return null;
+        var p = isoDate.split('-');
+        if (p.length !== 3) return null;
+        return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      }
+
+      function getWeekdayMonIdx(isoDate) {
+        var d = parseISODate(isoDate);
+        if (!d) return 0;
+        var jsDay = d.getDay(); // 0 = Sun .. 6 = Sat
+        return jsDay === 0 ? 6 : jsDay - 1; // 0 = Mon .. 6 = Sun
+      }
+
+      function formatDateHuman(isoDate, withWeekday) {
+        var d = parseISODate(isoDate);
+        if (!d) return '—';
+        var base = pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1) + '.' + d.getFullYear();
+        if (!withWeekday) return base;
+        var wd = WEEKDAYS_SHORT_MON[getWeekdayMonIdx(isoDate)];
+        var today = getLocalISODate(new Date());
+        var yesterday = addDaysISO(today, -1);
+        if (isoDate === today) return 'Сегодня · ' + base + ' (' + wd + ')';
+        if (isoDate === yesterday) return 'Вчера · ' + base + ' (' + wd + ')';
+        return base + ' (' + wd + ')';
+      }
+
+      function formatDateShortChart(isoDate) {
+        var d = parseISODate(isoDate);
+        if (!d) return isoDate;
+        return pad2(d.getDate()) + '.' + pad2(d.getMonth() + 1);
+      }
+
+      function parseNum(val) {
+        if (typeof val === 'number') return isFinite(val) ? val : 0;
+        if (!val) return 0;
+        var cleaned = String(val).replace(/\s+/g, '').replace(',', '.');
+        var num = parseFloat(cleaned);
+        return isFinite(num) ? num : 0;
+      }
+
+      function round2(n) {
+        return Math.round((Number(n) || 0) * 100) / 100;
+      }
+
+      function formatMoney(val, showPlus) {
+        var n = Math.round(Number(val) || 0);
+        var absStr = Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+        if (n < 0) return '−' + absStr + '\u00A0₽';
+        if (n > 0 && showPlus) return '+' + absStr + '\u00A0₽';
+        return absStr + '\u00A0₽';
+      }
+
+      function formatMoneyExact(val) {
+        var r = round2(val);
+        var isInt = Math.abs(r - Math.round(r)) < 0.005;
+        if (isInt) return formatMoney(r, false);
+        var sign = r < 0 ? '−' : '';
+        var parts = Math.abs(r).toFixed(2).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+        return sign + parts.join(',') + '\u00A0₽';
+      }
+
+      function formatHours(h) {
+        var r = round2(h);
+        if (r === 0) return '0 ч';
+        var str = (Math.abs(r - Math.round(r)) < 0.01)
+          ? String(Math.round(r))
+          : r.toFixed(1).replace('.0', '').replace('.', ',');
+        return str + '\u00A0ч';
+      }
+
+      function uid() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      }
+
+      function calcIntervalHours(startStr, endStr) {
+        if (!startStr || !endStr) return { hours: 0, overnight: false };
+        var sp = startStr.split(':');
+        var ep = endStr.split(':');
+        if (sp.length < 2 || ep.length < 2) return { hours: 0, overnight: false };
+        var sMin = Number(sp[0]) * 60 + Number(sp[1]);
+        var eMin = Number(ep[0]) * 60 + Number(ep[1]);
+        if (!isFinite(sMin) || !isFinite(eMin) || sMin === eMin) {
+          return { hours: 0, overnight: false };
+        }
+        var overnight = false;
+        var diff = eMin - sMin;
+        if (diff < 0) {
+          diff = (eMin + 24 * 60) - sMin;
+          overnight = true;
+        }
+        return { hours: diff / 60, overnight: overnight };
+      }
+
+      function computeShiftMetrics(shift) {
+        var totalHours = 0;
+        var intervals = Array.isArray(shift.intervals) ? shift.intervals : [];
+        for (var i = 0; i < intervals.length; i++) {
+          totalHours += calcIntervalHours(intervals[i].start, intervals[i].end).hours;
+        }
+        var gross = Math.max(0, parseNum(shift.grossIncome));
+        var tips = Math.max(0, parseNum(shift.tips));
+        var mileage = Math.max(0, parseNum(shift.mileage));
+        var revenue = round2(gross + tips);
+
+        var commPct = (shift.commissionPct !== undefined && shift.commissionPct !== null && shift.commissionPct !== '')
+          ? Math.max(0, parseNum(shift.commissionPct))
+          : 0;
+        /* Комиссия снимается строго ТОЛЬКО с поля "Доход" (без чаевых) */
+        var commissionAmount = round2(gross * (commPct / 100));
+
+        var deprRate = (shift.depreciationPerKm !== undefined && shift.depreciationPerKm !== null && shift.depreciationPerKm !== '')
+          ? Math.max(0, parseNum(shift.depreciationPerKm))
+          : 0;
+        var depreciationAmount = round2(mileage * deprRate);
+
+        var listExpenses = 0;
+        var expenses = Array.isArray(shift.expenses) ? shift.expenses : [];
+        for (var j = 0; j < expenses.length; j++) {
+          listExpenses += Math.max(0, parseNum(expenses[j].amount));
+        }
+        listExpenses = round2(listExpenses);
+
+        var totalExpenses = round2(commissionAmount + depreciationAmount + listExpenses);
+        var netProfit = round2((gross - commissionAmount) + tips - depreciationAmount - listExpenses);
+        var hourlyRate = totalHours > 0 ? netProfit / totalHours : 0;
+
+        return {
+          totalHours: totalHours,
+          gross: gross,
+          tips: tips,
+          mileage: mileage,
+          revenue: revenue,
+          commissionPct: commPct,
+          commissionAmount: commissionAmount,
+          depreciationPerKm: deprRate,
+          depreciationAmount: depreciationAmount,
+          listExpenses: listExpenses,
+          totalExpenses: totalExpenses,
+          netProfit: netProfit,
+          hourlyRate: hourlyRate
+        };
+      }
+
+      /* ==================== STATE & PERSISTENCE ==================== */
+      function buildDemoShifts(commPctDefault, deprRateDefault) {
+        var pct = isFinite(Number(commPctDefault)) ? Number(commPctDefault) : DEFAULT_SETTINGS.commissionPct;
+        var depr = isFinite(Number(deprRateDefault)) ? Number(deprRateDefault) : DEFAULT_SETTINGS.depreciationPerKm;
+        var today = getLocalISODate(new Date());
+        var samples = [
+          {
+            offset: -1,
+            gross: 8400,
+            tips: 450,
+            mileage: 235,
+            intervals: [{ start: '08:00', end: '13:30' }, { start: '16:30', end: '21:00' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 920 },
+              { name: 'Заправка бензин', amount: 350 }
+            ],
+            notes: 'Утренний час пик и вечерние заказы из центра'
+          },
+          {
+            offset: -2,
+            gross: 9650,
+            tips: 600,
+            mileage: 268,
+            intervals: [{ start: '18:00', end: '02:30' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 1050 },
+              { name: 'Мойка', amount: 450 }
+            ],
+            notes: 'Ночная смена с переходом через полночь, повышенный спрос'
+          },
+          {
+            offset: -4,
+            gross: 6900,
+            tips: 200,
+            mileage: 195,
+            intervals: [{ start: '07:30', end: '15:30' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 780 }
+            ],
+            notes: 'Спокойная дневная смена'
+          },
+          {
+            offset: -5,
+            gross: 7850,
+            tips: 350,
+            mileage: 210,
+            intervals: [{ start: '09:00', end: '14:00' }, { start: '17:00', end: '20:30' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 880 },
+              { name: 'Заправка бензин', amount: 500 },
+              { name: 'Мойка', amount: 350 }
+            ],
+            notes: 'Два интервала, дозаправка газом и бензином на прогрев'
+          },
+          {
+            offset: -7,
+            gross: 3100,
+            tips: 0,
+            mileage: 92,
+            intervals: [{ start: '10:00', end: '13:30' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 420 },
+              { name: 'ТО и замена масла', amount: 2800 }
+            ],
+            notes: 'Короткий выезд и плановая замена масла'
+          },
+          {
+            offset: -10,
+            gross: 10200,
+            tips: 750,
+            mileage: 284,
+            intervals: [{ start: '15:00', end: '00:30' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 1120 },
+              { name: 'Мойка', amount: 400 }
+            ],
+            notes: 'Отличные коэффициенты вечером, аэропорт туда и обратно'
+          },
+          {
+            offset: -14,
+            gross: 7400,
+            tips: 300,
+            mileage: 205,
+            intervals: [{ start: '08:30', end: '17:00' }],
+            expenses: [
+              { name: 'Заправка газ', amount: 830 }
+            ],
+            notes: 'Ровная смена по городу'
+          }
+        ];
+
+        return samples.map(function (s, idx) {
+          return {
+            id: 'demo_' + idx + '_' + uid(),
+            date: addDaysISO(today, s.offset),
+            grossIncome: s.gross,
+            commissionPct: pct,
+            depreciationPerKm: depr,
+            tips: s.tips,
+            mileage: s.mileage,
+            intervals: s.intervals.map(function (it) {
+              return { id: uid(), start: it.start, end: it.end };
+            }),
+            expenses: s.expenses.map(function (ex) {
+              return { id: uid(), name: ex.name, amount: ex.amount };
+            }),
+            notes: s.notes
+          };
+        });
+      }
+
+      function loadSettings() {
+        try {
+          var raw = localStorage.getItem(STORAGE_SETTINGS);
+          if (!raw) return Object.assign({}, DEFAULT_SETTINGS);
+          var parsed = JSON.parse(raw);
+          var depr = isFinite(Number(parsed.depreciationPerKm))
+            ? Number(parsed.depreciationPerKm)
+            : (isFinite(Number(parsed.depreciationRate)) ? Number(parsed.depreciationRate) : DEFAULT_SETTINGS.depreciationPerKm);
+          var cleaned = {
+            commissionPct: isFinite(Number(parsed.commissionPct)) ? Number(parsed.commissionPct) : DEFAULT_SETTINGS.commissionPct,
+            depreciationPerKm: depr
+          };
+          localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(cleaned));
+          return cleaned;
+        } catch (e) {
+          return Object.assign({}, DEFAULT_SETTINGS);
+        }
+      }
+
+      function saveSettingsToStorage(settings) {
+        try {
+          localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
+        } catch (e) {}
+      }
+
+      function loadShifts(currentSettings) {
+        try {
+          var raw = localStorage.getItem(STORAGE_SHIFTS);
+          if (raw) {
+            var arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              if (!localStorage.getItem(STORAGE_MIGRATED_V3)) {
+                var userShifts = arr.filter(function (s) {
+                  return !String(s.id || '').startsWith('demo_');
+                });
+                var migrated;
+                if (userShifts.length === 0 && arr.length > 0) {
+                  migrated = buildDemoShifts(currentSettings.commissionPct, currentSettings.depreciationPerKm);
+                } else {
+                  migrated = userShifts.map(function (s) {
+                    var gross = Math.max(0, parseNum(s.grossIncome));
+                    var mileage = Math.max(0, parseNum(s.mileage));
+                    var commRowAmt = 0;
+                    var amortRowAmt = 0;
+                    var filteredExp = (s.expenses || []).filter(function (ex) {
+                      var n = String(ex.name || '').trim().toLowerCase();
+                      if (n === 'комиссия' && (s.commissionPct === undefined || s.commissionPct === null)) {
+                        commRowAmt += Math.max(0, parseNum(ex.amount));
+                        return false;
+                      }
+                      if (n === 'амортизация' && (s.depreciationPerKm === undefined || s.depreciationPerKm === null)) {
+                        amortRowAmt += Math.max(0, parseNum(ex.amount));
+                        return false;
+                      }
+                      return true;
+                    });
+                    var pct = (s.commissionPct !== undefined && s.commissionPct !== null)
+                      ? Number(s.commissionPct)
+                      : currentSettings.commissionPct;
+                    if (commRowAmt > 0 && gross > 0) {
+                      pct = round2((commRowAmt / gross) * 100);
+                    }
+                    var depr = (s.depreciationPerKm !== undefined && s.depreciationPerKm !== null)
+                      ? Number(s.depreciationPerKm)
+                      : currentSettings.depreciationPerKm;
+                    if (amortRowAmt > 0 && mileage > 0) {
+                      depr = round2(amortRowAmt / mileage);
+                    }
+                    return Object.assign({}, s, {
+                      commissionPct: pct,
+                      depreciationPerKm: depr,
+                      expenses: filteredExp
+                    });
+                  });
+                }
+                localStorage.setItem(STORAGE_SHIFTS, JSON.stringify(migrated));
+                localStorage.setItem(STORAGE_MIGRATED_V3, '1');
+                return migrated;
+              }
+              return arr;
+            }
+          }
+          if (!localStorage.getItem(STORAGE_INIT_FLAG)) {
+            var demo = buildDemoShifts(currentSettings.commissionPct, currentSettings.depreciationPerKm);
+            localStorage.setItem(STORAGE_SHIFTS, JSON.stringify(demo));
+            localStorage.setItem(STORAGE_INIT_FLAG, '1');
+            localStorage.setItem(STORAGE_MIGRATED_V3, '1');
+            return demo;
+          }
+          return [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveShiftsToStorage(shifts) {
+        try {
+          localStorage.setItem(STORAGE_SHIFTS, JSON.stringify(shifts));
+          localStorage.setItem(STORAGE_INIT_FLAG, '1');
+          localStorage.setItem(STORAGE_MIGRATED_V3, '1');
+        } catch (e) {}
+      }
+
+      function createFreshDraft(settingsObj) {
+        var s = settingsObj || (state && state.settings) || DEFAULT_SETTINGS;
+        return {
+          date: getLocalISODate(new Date()),
+          grossIncome: '',
+          commissionPct: s.commissionPct,
+          depreciationPerKm: s.depreciationPerKm,
+          tips: '',
+          mileage: '',
+          notes: '',
+          intervals: [
+            { id: uid(), start: '09:00', end: '17:00' }
+          ],
+          expenses: []
+        };
+      }
+
+      var initialSettings = loadSettings();
+      var state = {
+        activeTab: 'shift',
+        settings: initialSettings,
+        shifts: loadShifts(initialSettings),
+        editingShiftId: null,
+        draft: createFreshDraft(initialSettings),
+        historyFilter: {
+          from: '',
+          to: '',
+          expandedIds: {}
+        },
+        analytics: {
+          period: 'all',
+          customFrom: '',
+          customTo: '',
+          hoverDailyIdx: -1,
+          hoverWeekdayIdx: -1,
+          hoverExpenseIdx: -1
+        }
+      };
+
+      /* ==================== TOAST & CONFIRMATION UI ==================== */
+      var toastContainer = document.getElementById('toast-container');
+
+      function showToast(msg, variant) {
+        var el = document.createElement('div');
+        el.className = 'toast' + (variant ? ' ' + variant : '');
+        el.textContent = msg;
+        toastContainer.appendChild(el);
+        setTimeout(function () {
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 180ms ease';
+          setTimeout(function () {
+            if (el.parentNode) el.parentNode.removeChild(el);
+          }, 190);
+        }, 2600);
+      }
+
+      var confirmModal = document.getElementById('confirm-modal');
+      var confirmTitleEl = document.getElementById('confirm-title');
+      var confirmDescEl = document.getElementById('confirm-desc');
+      var confirmOkBtn = document.getElementById('confirm-ok-btn');
+      var confirmCallback = null;
+
+      function openConfirmDialog(opts) {
+        confirmTitleEl.textContent = opts.title || 'Подтверждение';
+        confirmDescEl.textContent = opts.message || '';
+        confirmOkBtn.textContent = opts.confirmText || 'Подтвердить';
+        confirmCallback = opts.onConfirm || null;
+        confirmModal.classList.add('open');
+      }
+
+      function closeConfirmDialog() {
+        confirmModal.classList.remove('open');
+        confirmCallback = null;
+      }
+
+      document.getElementById('confirm-close-btn').addEventListener('click', closeConfirmDialog);
+      document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmDialog);
+      confirmOkBtn.addEventListener('click', function () {
+        var cb = confirmCallback;
+        closeConfirmDialog();
+        if (cb) cb();
+      });
+      confirmModal.addEventListener('click', function (e) {
+        if (e.target === confirmModal) closeConfirmDialog();
+      });
+
+      /* ==================== CUSTOM DATE PICKER ==================== */
+      var dpModal = document.getElementById('date-picker-modal');
+      var dpTitle = document.getElementById('dp-title');
+      var dpClearBtn = document.getElementById('dp-clear-btn');
+      var calMonthLabel = document.getElementById('cal-month-label');
+      var calDaysGrid = document.getElementById('cal-days-grid');
+
+      var dpState = {
+        viewYear: 2026,
+        viewMonth: 10,
+        selectedISO: '',
+        allowClear: false,
+        onSelect: null
+      };
+
+      function getShiftDatesMap() {
+        var map = {};
+        for (var i = 0; i < state.shifts.length; i++) {
+          map[state.shifts[i].date] = true;
+        }
+        return map;
+      }
+
+      function openDatePicker(opts) {
+        dpTitle.textContent = opts.title || 'Выберите дату';
+        dpState.selectedISO = opts.value || '';
+        dpState.allowClear = Boolean(opts.allowClear);
+        dpState.onSelect = opts.onSelect;
+        dpClearBtn.hidden = !dpState.allowClear;
+
+        var baseDate = parseISODate(dpState.selectedISO) || new Date();
+        dpState.viewYear = baseDate.getFullYear();
+        dpState.viewMonth = baseDate.getMonth();
+
+        renderCalendarGrid();
+        dpModal.classList.add('open');
+      }
+
+      function closeDatePicker() {
+        dpModal.classList.remove('open');
+      }
+
+      function renderCalendarGrid() {
+        calMonthLabel.textContent = MONTHS_RU[dpState.viewMonth] + ' ' + dpState.viewYear;
+        calDaysGrid.innerHTML = '';
+
+        var firstOfMonth = new Date(dpState.viewYear, dpState.viewMonth, 1);
+        var jsDay = firstOfMonth.getDay();
+        var startOffset = jsDay === 0 ? 6 : jsDay - 1; // Monday = 0
+        var daysInMonth = new Date(dpState.viewYear, dpState.viewMonth + 1, 0).getDate();
+        var prevMonthDays = new Date(dpState.viewYear, dpState.viewMonth, 0).getDate();
+
+        var todayISO = getLocalISODate(new Date());
+        var shiftDates = getShiftDatesMap();
+
+        var totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+        for (var i = 0; i < totalCells; i++) {
+          var cellDate;
+          var isOther = false;
+          if (i < startOffset) {
+            var dPrev = prevMonthDays - startOffset + i + 1;
+            cellDate = new Date(dpState.viewYear, dpState.viewMonth - 1, dPrev);
+            isOther = true;
+          } else if (i >= startOffset + daysInMonth) {
+            var dNext = i - (startOffset + daysInMonth) + 1;
+            cellDate = new Date(dpState.viewYear, dpState.viewMonth + 1, dNext);
+            isOther = true;
+          } else {
+            var dCur = i - startOffset + 1;
+            cellDate = new Date(dpState.viewYear, dpState.viewMonth, dCur);
+          }
+
+          var iso = getLocalISODate(cellDate);
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cal-day-btn';
+          if (isOther) btn.classList.add('other-month');
+          if (iso === todayISO) btn.classList.add('is-today');
+          if (iso === dpState.selectedISO) btn.classList.add('is-selected');
+          if (shiftDates[iso]) btn.classList.add('has-shift');
+          btn.textContent = String(cellDate.getDate());
+          btn.setAttribute('data-iso', iso);
+
+          btn.addEventListener('click', function () {
+            var picked = this.getAttribute('data-iso');
+            if (dpState.onSelect) dpState.onSelect(picked);
+            closeDatePicker();
+          });
+
+          calDaysGrid.appendChild(btn);
+        }
+      }
+
+      document.getElementById('cal-prev-btn').addEventListener('click', function () {
+        dpState.viewMonth -= 1;
+        if (dpState.viewMonth < 0) {
+          dpState.viewMonth = 11;
+          dpState.viewYear -= 1;
+        }
+        renderCalendarGrid();
+      });
+
+      document.getElementById('cal-next-btn').addEventListener('click', function () {
+        dpState.viewMonth += 1;
+        if (dpState.viewMonth > 11) {
+          dpState.viewMonth = 0;
+          dpState.viewYear += 1;
+        }
+        renderCalendarGrid();
+      });
+
+      document.getElementById('dp-today-btn').addEventListener('click', function () {
+        var iso = getLocalISODate(new Date());
+        if (dpState.onSelect) dpState.onSelect(iso);
+        closeDatePicker();
+      });
+
+      document.getElementById('dp-yesterday-btn').addEventListener('click', function () {
+        var iso = addDaysISO(getLocalISODate(new Date()), -1);
+        if (dpState.onSelect) dpState.onSelect(iso);
+        closeDatePicker();
+      });
+
+      dpClearBtn.addEventListener('click', function () {
+        if (dpState.onSelect) dpState.onSelect('');
+        closeDatePicker();
+      });
+
+      document.getElementById('dp-close-btn').addEventListener('click', closeDatePicker);
+      dpModal.addEventListener('click', function (e) {
+        if (e.target === dpModal) closeDatePicker();
+      });
+
+      /* ==================== CUSTOM TIME PICKER ==================== */
+      var tpModal = document.getElementById('time-picker-modal');
+      var tpTitle = document.getElementById('tp-title');
+      var tpDisplay = document.getElementById('tp-display');
+      var tpHoursList = document.getElementById('tp-hours-list');
+      var tpMinutesList = document.getElementById('tp-minutes-list');
+
+      var tpState = {
+        hour: 9,
+        minute: 0,
+        onSelect: null
+      };
+
+      function initTimePickerColumns() {
+        tpHoursList.innerHTML = '';
+        for (var h = 0; h < 24; h++) {
+          var hb = document.createElement('button');
+          hb.type = 'button';
+          hb.className = 'time-opt-btn';
+          hb.textContent = pad2(h);
+          hb.setAttribute('data-hour', String(h));
+          hb.addEventListener('click', function () {
+            tpState.hour = Number(this.getAttribute('data-hour'));
+            syncTimePickerSelection(false);
+          });
+          tpHoursList.appendChild(hb);
+        }
+
+        tpMinutesList.innerHTML = '';
+        for (var m = 0; m < 60; m++) {
+          var mb = document.createElement('button');
+          mb.type = 'button';
+          mb.className = 'time-opt-btn';
+          mb.textContent = pad2(m);
+          mb.setAttribute('data-minute', String(m));
+          mb.addEventListener('click', function () {
+            tpState.minute = Number(this.getAttribute('data-minute'));
+            syncTimePickerSelection(false);
+          });
+          tpMinutesList.appendChild(mb);
+        }
+      }
+
+      function syncTimePickerSelection(scrollIntoCenter) {
+        tpDisplay.textContent = pad2(tpState.hour) + ':' + pad2(tpState.minute);
+
+        var hBtns = tpHoursList.querySelectorAll('.time-opt-btn');
+        var activeHourBtn = null;
+        for (var i = 0; i < hBtns.length; i++) {
+          var isH = Number(hBtns[i].getAttribute('data-hour')) === tpState.hour;
+          hBtns[i].classList.toggle('selected', isH);
+          if (isH) activeHourBtn = hBtns[i];
+        }
+
+        var mBtns = tpMinutesList.querySelectorAll('.time-opt-btn');
+        var activeMinBtn = null;
+        for (var j = 0; j < mBtns.length; j++) {
+          var isM = Number(mBtns[j].getAttribute('data-minute')) === tpState.minute;
+          mBtns[j].classList.toggle('selected', isM);
+          if (isM) activeMinBtn = mBtns[j];
+        }
+
+        if (scrollIntoCenter) {
+          requestAnimationFrame(function () {
+            if (activeHourBtn) {
+              tpHoursList.scrollTop = activeHourBtn.offsetTop - tpHoursList.clientHeight / 2 + activeHourBtn.clientHeight / 2;
+            }
+            if (activeMinBtn) {
+              tpMinutesList.scrollTop = activeMinBtn.offsetTop - tpMinutesList.clientHeight / 2 + activeMinBtn.clientHeight / 2;
+            }
+          });
+        }
+      }
+
+      function openTimePicker(opts) {
+        tpTitle.textContent = opts.title || 'Выберите время';
+        var val = opts.value || '09:00';
+        var parts = val.split(':');
+        tpState.hour = Math.min(23, Math.max(0, Number(parts[0]) || 0));
+        tpState.minute = Math.min(59, Math.max(0, Number(parts[1]) || 0));
+        tpState.onSelect = opts.onSelect;
+        tpModal.classList.add('open');
+        syncTimePickerSelection(true);
+      }
+
+      function closeTimePicker() {
+        tpModal.classList.remove('open');
+      }
+
+      document.getElementById('tp-presets-row').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-quick-time]');
+        if (!btn) return;
+        var qt = btn.getAttribute('data-quick-time');
+        if (qt === 'now') {
+          var now = new Date();
+          tpState.hour = now.getHours();
+          tpState.minute = now.getMinutes();
+        } else {
+          var p = qt.split(':');
+          tpState.hour = Number(p[0]);
+          tpState.minute = Number(p[1]);
+        }
+        syncTimePickerSelection(true);
+      });
+
+      document.getElementById('tp-apply-btn').addEventListener('click', function () {
+        var formatted = pad2(tpState.hour) + ':' + pad2(tpState.minute);
+        if (tpState.onSelect) tpState.onSelect(formatted);
+        closeTimePicker();
+      });
+
+      document.getElementById('tp-close-btn').addEventListener('click', closeTimePicker);
+      tpModal.addEventListener('click', function (e) {
+        if (e.target === tpModal) closeTimePicker();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          closeDatePicker();
+          closeTimePicker();
+          closeConfirmDialog();
+        }
+      });
+
+      /* ==================== NAVIGATION & TABS ==================== */
+      var topQuickActionBtn = document.getElementById('top-quick-action');
+
+      function switchTab(tabId) {
+        state.activeTab = tabId;
+
+        var panels = document.querySelectorAll('.tab-panel');
+        for (var i = 0; i < panels.length; i++) {
+          panels[i].classList.toggle('active', panels[i].id === 'panel-' + tabId);
+        }
+
+        var navBtns = document.querySelectorAll('[data-tab]');
+        for (var j = 0; j < navBtns.length; j++) {
+          navBtns[j].classList.toggle('active', navBtns[j].getAttribute('data-tab') === tabId);
+        }
+
+        if (tabId === 'shift') {
+          topQuickActionBtn.textContent = 'Экспорт CSV';
+        } else {
+          topQuickActionBtn.textContent = '+ Новая смена';
+        }
+
+        if (tabId === 'history') {
+          renderHistoryTab();
+        } else if (tabId === 'analytics') {
+          requestAnimationFrame(function () {
+            renderAnalyticsTab();
+          });
+        } else if (tabId === 'settings') {
+          renderSettingsTab();
+        } else if (tabId === 'shift') {
+          updateLivePreview();
+        }
+      }
+
+      document.addEventListener('click', function (e) {
+        var tabBtn = e.target.closest('[data-tab]');
+        if (tabBtn) {
+          switchTab(tabBtn.getAttribute('data-tab'));
+        }
+      });
+
+      document.getElementById('brand-link').addEventListener('click', function (e) {
+        e.preventDefault();
+        switchTab('shift');
+      });
+
+      topQuickActionBtn.addEventListener('click', function () {
+        if (state.activeTab === 'shift') {
+          exportVisibleHistoryCSV();
+        } else {
+          switchTab('shift');
+        }
+      });
+
+      document.getElementById('empty-go-shift-btn').addEventListener('click', function () {
+        switchTab('shift');
+      });
+
+      /* ==================== TAB 1: СМЕНА LOGIC ==================== */
+      var shiftDateBtn = document.getElementById('shift-date-btn');
+      var shiftDateText = document.getElementById('shift-date-text');
+      var inputGross = document.getElementById('input-gross');
+      var inputCommissionPct = document.getElementById('input-commission-pct');
+      var grossCommissionCaption = document.getElementById('gross-commission-caption');
+      var inputDepreciationRate = document.getElementById('input-depreciation-rate');
+      var depreciationCaption = document.getElementById('depreciation-caption');
+      var inputTips = document.getElementById('input-tips');
+      var inputMileage = document.getElementById('input-mileage');
+      var inputNotes = document.getElementById('input-notes');
+      var intervalsContainer = document.getElementById('intervals-container');
+      var expensesContainer = document.getElementById('expenses-container');
+      var editModeBanner = document.getElementById('edit-mode-banner');
+      var editBannerLabel = document.getElementById('edit-banner-label');
+      var saveShiftBtn = document.getElementById('save-shift-btn');
+
+      shiftDateBtn.addEventListener('click', function () {
+        openDatePicker({
+          title: 'Дата рабочей смены',
+          value: state.draft.date,
+          allowClear: false,
+          onSelect: function (iso) {
+            state.draft.date = iso;
+            shiftDateText.textContent = formatDateHuman(iso, true);
+          }
+        });
+      });
+
+      inputGross.addEventListener('input', function () {
+        state.draft.grossIncome = this.value;
+        updateLivePreview();
+      });
+
+      inputCommissionPct.addEventListener('input', function () {
+        state.draft.commissionPct = this.value;
+        updateLivePreview();
+      });
+
+      inputDepreciationRate.addEventListener('input', function () {
+        state.draft.depreciationPerKm = this.value;
+        updateLivePreview();
+      });
+
+      inputTips.addEventListener('input', function () {
+        state.draft.tips = this.value;
+        updateLivePreview();
+      });
+
+      inputMileage.addEventListener('input', function () {
+        state.draft.mileage = this.value;
+        updateLivePreview();
+      });
+
+      inputNotes.addEventListener('input', function () {
+        state.draft.notes = this.value;
+      });
+
+      function renderIntervalsList() {
+        intervalsContainer.innerHTML = '';
+
+        if (state.draft.intervals.length === 0) {
+          var emptyMsg = document.createElement('div');
+          emptyMsg.className = 'expense-empty';
+          emptyMsg.textContent = 'Интервалы работы не добавлены.';
+          intervalsContainer.appendChild(emptyMsg);
+          return;
+        }
+
+        state.draft.intervals.forEach(function (item, idx) {
+          var row = document.createElement('div');
+          row.className = 'interval-row';
+
+          var startBtn = document.createElement('button');
+          startBtn.type = 'button';
+          startBtn.className = 'picker-trigger num';
+          startBtn.innerHTML = '<span>' + item.start + '</span>' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>';
+          startBtn.addEventListener('click', function () {
+            openTimePicker({
+              title: 'Начало интервала #' + (idx + 1),
+              value: item.start,
+              onSelect: function (val) {
+                item.start = val;
+                renderIntervalsList();
+                updateLivePreview();
+              }
+            });
+          });
+
+          var sep = document.createElement('span');
+          sep.className = 'interval-sep';
+          sep.textContent = '—';
+
+          var endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'picker-trigger num';
+          endBtn.innerHTML = '<span>' + item.end + '</span>' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg>';
+          endBtn.addEventListener('click', function () {
+            openTimePicker({
+              title: 'Конец интервала #' + (idx + 1),
+              value: item.end,
+              onSelect: function (val) {
+                item.end = val;
+                renderIntervalsList();
+                updateLivePreview();
+              }
+            });
+          });
+
+          var calc = calcIntervalHours(item.start, item.end);
+          var durEl = document.createElement('div');
+          durEl.className = 'interval-duration';
+          durEl.innerHTML = formatHours(calc.hours) +
+            (calc.overnight ? '<span class="overnight-note">+24 ч (полночь)</span>' : '');
+
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn-icon-remove';
+          delBtn.setAttribute('aria-label', 'Удалить интервал');
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', function () {
+            state.draft.intervals = state.draft.intervals.filter(function (x) { return x.id !== item.id; });
+            renderIntervalsList();
+            updateLivePreview();
+          });
+
+          row.appendChild(startBtn);
+          row.appendChild(sep);
+          row.appendChild(endBtn);
+          row.appendChild(durEl);
+          row.appendChild(delBtn);
+
+          intervalsContainer.appendChild(row);
+        });
+      }
+
+      document.getElementById('add-interval-btn').addEventListener('click', function () {
+        var last = state.draft.intervals[state.draft.intervals.length - 1];
+        var nextStart = '14:00';
+        var nextEnd = '18:00';
+        if (last && last.end) {
+          var ep = last.end.split(':');
+          var sh = (Number(ep[0]) + 1) % 24;
+          var eh = (sh + 4) % 24;
+          nextStart = pad2(sh) + ':' + ep[1];
+          nextEnd = pad2(eh) + ':' + ep[1];
+        }
+        state.draft.intervals.push({
+          id: uid(),
+          start: nextStart,
+          end: nextEnd
+        });
+        renderIntervalsList();
+        updateLivePreview();
+      });
+
+      function renderExpensesList(focusTarget) {
+        expensesContainer.innerHTML = '';
+
+        if (state.draft.expenses.length === 0) {
+          var empty = document.createElement('div');
+          empty.className = 'expense-empty';
+          empty.textContent = 'Расходы не добавлены. Нажмите на кнопку-подсказку выше или добавьте свою строку.';
+          expensesContainer.appendChild(empty);
+          return;
+        }
+
+        state.draft.expenses.forEach(function (exp) {
+          var row = document.createElement('div');
+          row.className = 'expense-row';
+
+          var nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.className = 'form-input';
+          nameInput.placeholder = 'Название (Мойка, Штраф...)';
+          nameInput.value = exp.name;
+          nameInput.addEventListener('input', function () {
+            exp.name = this.value;
+          });
+
+          var amtWrap = document.createElement('div');
+          amtWrap.className = 'input-wrap';
+
+          var amtInput = document.createElement('input');
+          amtInput.type = 'text';
+          amtInput.inputMode = 'decimal';
+          amtInput.className = 'form-input has-suffix num';
+          amtInput.placeholder = '0';
+          amtInput.value = exp.amount === '' ? '' : String(exp.amount);
+          amtInput.addEventListener('focus', function () {
+            if (this.value === '0') {
+              this.select();
+            }
+          });
+          amtInput.addEventListener('input', function () {
+            exp.amount = this.value;
+            updateLivePreview();
+          });
+
+          var suffix = document.createElement('span');
+          suffix.className = 'input-suffix';
+          suffix.textContent = '₽';
+
+          amtWrap.appendChild(amtInput);
+          amtWrap.appendChild(suffix);
+
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn-icon-remove';
+          delBtn.setAttribute('aria-label', 'Удалить расход');
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', function () {
+            state.draft.expenses = state.draft.expenses.filter(function (x) { return x.id !== exp.id; });
+            renderExpensesList();
+            updateLivePreview();
+          });
+
+          row.appendChild(nameInput);
+          row.appendChild(amtWrap);
+          row.appendChild(delBtn);
+
+          expensesContainer.appendChild(row);
+
+          if (focusTarget && focusTarget.id === exp.id) {
+            requestAnimationFrame(function () {
+              if (focusTarget.field === 'name') {
+                nameInput.focus();
+              } else if (focusTarget.field === 'amount') {
+                amtInput.focus();
+                amtInput.select();
+              }
+            });
+          }
+        });
+      }
+
+      document.getElementById('add-custom-expense-btn').addEventListener('click', function () {
+        var newId = uid();
+        state.draft.expenses.push({
+          id: newId,
+          name: '',
+          amount: ''
+        });
+        renderExpensesList({ id: newId, field: 'name' });
+        updateLivePreview();
+      });
+
+      document.querySelector('.presets-row').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-preset]');
+        if (!btn) return;
+        var type = btn.getAttribute('data-preset');
+
+        var newId = uid();
+        var rowName = '';
+
+        if (type === 'gas') {
+          rowName = 'Заправка газ';
+        } else if (type === 'petrol') {
+          rowName = 'Заправка бензин';
+        } else if (type === 'wash') {
+          rowName = 'Мойка';
+        } else {
+          return;
+        }
+
+        state.draft.expenses.push({
+          id: newId,
+          name: rowName,
+          amount: ''
+        });
+
+        renderExpensesList({ id: newId, field: 'amount' });
+        updateLivePreview();
+      });
+
+      function updateLivePreview() {
+        var m = computeShiftMetrics(state.draft);
+
+        grossCommissionCaption.textContent =
+          'Удержание с дохода: ' + formatMoneyExact(m.commissionAmount) +
+          ' · чаевые без комиссии';
+
+        depreciationCaption.textContent =
+          'Начислено: ' + formatMoneyExact(m.depreciationAmount) +
+          ' (' + round2(m.mileage) + ' км × ' + String(round2(m.depreciationPerKm)).replace('.', ',') + ' ₽/км)';
+
+        document.getElementById('intervals-total-badge').textContent = formatHours(m.totalHours);
+        document.getElementById('expenses-total-badge').textContent = formatMoneyExact(m.listExpenses);
+
+        var netEl = document.getElementById('preview-net');
+        netEl.textContent = formatMoney(m.netProfit, m.netProfit > 0);
+        netEl.className = 'preview-hero-value num ' +
+          (m.netProfit > 0 ? 'val-pos' : (m.netProfit < 0 ? 'val-neg' : ''));
+
+        var formulaParts = [];
+        formulaParts.push('Доход ' + formatMoney(m.gross, false));
+        formulaParts.push('− Комиссия ' + formatMoney(m.commissionAmount, false) + ' (' + m.commissionPct + '%)');
+        if (m.depreciationAmount > 0) {
+          formulaParts.push('− Амортизация ' + formatMoney(m.depreciationAmount, false));
+        }
+        if (m.tips > 0) formulaParts.push('+ Чаевые ' + formatMoney(m.tips, false));
+        if (m.listExpenses > 0) formulaParts.push('− Расходы ' + formatMoney(m.listExpenses, false));
+        document.getElementById('preview-formula').textContent = formulaParts.join(' ');
+
+        document.getElementById('preview-hours').textContent = formatHours(m.totalHours);
+        document.getElementById('preview-commission').textContent = formatMoney(m.commissionAmount, false);
+        document.getElementById('preview-depreciation').textContent = formatMoney(m.depreciationAmount, false);
+        document.getElementById('preview-expenses').textContent = formatMoney(m.listExpenses, false);
+        document.getElementById('preview-total-expenses').textContent = formatMoney(m.totalExpenses, false);
+
+        var hourlyEl = document.getElementById('preview-hourly');
+        hourlyEl.textContent = formatMoney(m.hourlyRate, false) + '/ч';
+        hourlyEl.className = 'preview-stat-val num ' +
+          (m.hourlyRate > 0 ? 'val-pos' : (m.hourlyRate < 0 ? 'val-neg' : ''));
+      }
+
+      function syncDraftToFormUI() {
+        shiftDateText.textContent = formatDateHuman(state.draft.date, true);
+        inputGross.value = state.draft.grossIncome === '' ? '' : String(state.draft.grossIncome);
+        inputCommissionPct.value = state.draft.commissionPct === '' || state.draft.commissionPct === undefined
+          ? String(state.settings.commissionPct)
+          : String(state.draft.commissionPct);
+        inputDepreciationRate.value = state.draft.depreciationPerKm === '' || state.draft.depreciationPerKm === undefined
+          ? String(state.settings.depreciationPerKm)
+          : String(state.draft.depreciationPerKm);
+        inputTips.value = state.draft.tips === '' ? '' : String(state.draft.tips);
+        inputMileage.value = state.draft.mileage === '' ? '' : String(state.draft.mileage);
+        inputNotes.value = state.draft.notes || '';
+
+        if (state.editingShiftId) {
+          editModeBanner.classList.add('visible');
+          editBannerLabel.textContent = 'Редактирование смены за ' + formatDateHuman(state.draft.date, false);
+          saveShiftBtn.textContent = 'Сохранить изменения';
+        } else {
+          editModeBanner.classList.remove('visible');
+          saveShiftBtn.textContent = 'Сохранить смену';
+        }
+
+        renderIntervalsList();
+        renderExpensesList();
+        updateLivePreview();
+      }
+
+      function resetShiftForm() {
+        state.editingShiftId = null;
+        state.draft = createFreshDraft(state.settings);
+        syncDraftToFormUI();
+      }
+
+      document.getElementById('reset-shift-btn').addEventListener('click', function () {
+        resetShiftForm();
+        showToast('Форма очищена');
+      });
+
+      document.getElementById('cancel-edit-btn').addEventListener('click', function () {
+        resetShiftForm();
+        showToast('Редактирование отменено');
+      });
+
+      document.getElementById('shift-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var m = computeShiftMetrics(state.draft);
+        if (m.gross === 0 && m.tips === 0 && m.listExpenses === 0 && m.mileage === 0) {
+          showToast('Заполните доход, пробег или расходы перед сохранением смены', 'warn');
+          inputGross.focus();
+          return;
+        }
+
+        var cleanedExpenses = state.draft.expenses
+          .filter(function (ex) {
+            return String(ex.name || '').trim() !== '' || parseNum(ex.amount) > 0;
+          })
+          .map(function (ex) {
+            return {
+              id: ex.id || uid(),
+              name: String(ex.name || '').trim() || 'Прочий расход',
+              amount: round2(Math.max(0, parseNum(ex.amount)))
+            };
+          });
+
+        var cleanedIntervals = state.draft.intervals.map(function (it) {
+          return {
+            id: it.id || uid(),
+            start: it.start,
+            end: it.end
+          };
+        });
+
+        var record = {
+          id: state.editingShiftId || uid(),
+          date: state.draft.date || getLocalISODate(new Date()),
+          grossIncome: round2(m.gross),
+          commissionPct: round2(m.commissionPct),
+          depreciationPerKm: round2(m.depreciationPerKm),
+          tips: round2(m.tips),
+          mileage: round2(m.mileage),
+          intervals: cleanedIntervals,
+          expenses: cleanedExpenses,
+          notes: String(state.draft.notes || '').trim()
+        };
+
+        var wasEditing = Boolean(state.editingShiftId);
+        if (wasEditing) {
+          state.shifts = state.shifts.map(function (s) {
+            return s.id === record.id ? record : s;
+          });
+        } else {
+          state.shifts.unshift(record);
+        }
+
+        saveShiftsToStorage(state.shifts);
+        resetShiftForm();
+        showToast(wasEditing ? 'Изменения смены сохранены' : 'Смена сохранена в историю', 'success');
+      });
+
+      /* ==================== TAB 2: ИСТОРИЯ LOGIC ==================== */
+      var filterFromBtn = document.getElementById('filter-from-btn');
+      var filterFromText = document.getElementById('filter-from-text');
+      var filterToBtn = document.getElementById('filter-to-btn');
+      var filterToText = document.getElementById('filter-to-text');
+      var clearHistoryFilterBtn = document.getElementById('clear-history-filter-btn');
+      var historyTbody = document.getElementById('history-tbody');
+      var historyTableWrap = document.getElementById('history-table-wrap');
+      var historyEmpty = document.getElementById('history-empty');
+      var historySummaryLine = document.getElementById('history-summary-line');
+
+      function getFilteredHistoryShifts() {
+        var from = state.historyFilter.from;
+        var to = state.historyFilter.to;
+        return state.shifts
+          .filter(function (s) {
+            if (from && s.date < from) return false;
+            if (to && s.date > to) return false;
+            return true;
+          })
+          .slice()
+          .sort(function (a, b) {
+            return b.date.localeCompare(a.date);
+          });
+      }
+
+      function syncHistoryFilterButtons() {
+        var f = state.historyFilter.from;
+        var t = state.historyFilter.to;
+        filterFromText.textContent = f ? formatDateHuman(f, false) : 'Все даты';
+        filterFromBtn.classList.toggle('empty-val', !f);
+        filterToText.textContent = t ? formatDateHuman(t, false) : 'Все даты';
+        filterToBtn.classList.toggle('empty-val', !t);
+        clearHistoryFilterBtn.hidden = !(f || t);
+      }
+
+      filterFromBtn.addEventListener('click', function () {
+        openDatePicker({
+          title: 'Фильтр: дата от',
+          value: state.historyFilter.from,
+          allowClear: true,
+          onSelect: function (iso) {
+            state.historyFilter.from = iso;
+            if (iso && state.historyFilter.to && state.historyFilter.to < iso) {
+              state.historyFilter.to = iso;
+            }
+            renderHistoryTab();
+          }
+        });
+      });
+
+      filterToBtn.addEventListener('click', function () {
+        openDatePicker({
+          title: 'Фильтр: дата до',
+          value: state.historyFilter.to,
+          allowClear: true,
+          onSelect: function (iso) {
+            state.historyFilter.to = iso;
+            if (iso && state.historyFilter.from && state.historyFilter.from > iso) {
+              state.historyFilter.from = iso;
+            }
+            renderHistoryTab();
+          }
+        });
+      });
+
+      clearHistoryFilterBtn.addEventListener('click', function () {
+        state.historyFilter.from = '';
+        state.historyFilter.to = '';
+        renderHistoryTab();
+      });
+
+      function loadShiftForEdit(shift) {
+        state.editingShiftId = shift.id;
+        state.draft = {
+          date: shift.date,
+          grossIncome: shift.grossIncome || '',
+          commissionPct: shift.commissionPct !== undefined ? shift.commissionPct : state.settings.commissionPct,
+          depreciationPerKm: shift.depreciationPerKm !== undefined ? shift.depreciationPerKm : state.settings.depreciationPerKm,
+          tips: shift.tips || '',
+          mileage: shift.mileage || '',
+          notes: shift.notes || '',
+          intervals: (shift.intervals || []).map(function (it) {
+            return { id: it.id || uid(), start: it.start, end: it.end };
+          }),
+          expenses: (shift.expenses || []).map(function (ex) {
+            return { id: ex.id || uid(), name: ex.name, amount: ex.amount };
+          })
+        };
+        syncDraftToFormUI();
+        switchTab('shift');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function renderHistoryTab() {
+        syncHistoryFilterButtons();
+        var rows = getFilteredHistoryShifts();
+
+        if (rows.length === 0) {
+          historyTableWrap.hidden = true;
+          historyEmpty.hidden = false;
+          historySummaryLine.textContent = 'Показано смен: 0';
+          return;
+        }
+
+        historyTableWrap.hidden = false;
+        historyEmpty.hidden = true;
+        historyTbody.innerHTML = '';
+
+        var sumHours = 0;
+        var sumRevenue = 0;
+        var sumExpenses = 0;
+        var sumNet = 0;
+
+        rows.forEach(function (shift) {
+          var m = computeShiftMetrics(shift);
+          sumHours += m.totalHours;
+          sumRevenue += m.revenue;
+          sumExpenses += m.totalExpenses;
+          sumNet += m.netProfit;
+
+          var tr = document.createElement('tr');
+
+          /* 1. Дата */
+          var tdDate = document.createElement('td');
+          var wd = WEEKDAYS_SHORT_MON[getWeekdayMonIdx(shift.date)];
+          tdDate.innerHTML = '<div class="cell-main">' + formatDateHuman(shift.date, false) + ' · ' + wd + '</div>';
+          if (shift.notes) {
+            var noteSub = document.createElement('div');
+            noteSub.className = 'cell-sub';
+            noteSub.title = shift.notes;
+            noteSub.textContent = shift.notes;
+            tdDate.appendChild(noteSub);
+          }
+
+          /* 2. Часы */
+          var tdHours = document.createElement('td');
+          tdHours.className = 'align-right';
+          var intText = (shift.intervals || []).map(function (it) { return it.start + '–' + it.end; }).join(', ');
+          tdHours.innerHTML = '<div class="cell-main">' + formatHours(m.totalHours) + '</div>' +
+            (intText ? '<div class="cell-sub" style="margin-left:auto">' + intText + '</div>' : '');
+
+          /* 3. Доход (+чаевые) */
+          var tdIncome = document.createElement('td');
+          tdIncome.className = 'align-right';
+          tdIncome.innerHTML = '<div class="cell-main">' + formatMoney(m.revenue, false) + '</div>' +
+            (m.tips > 0
+              ? '<div class="cell-sub" style="margin-left:auto">' + formatMoney(m.gross, false) + ' + ' + formatMoney(m.tips, false) + ' чай</div>'
+              : '');
+
+          /* 4. Пробег */
+          var tdMileage = document.createElement('td');
+          tdMileage.className = 'align-right';
+          tdMileage.innerHTML = '<div class="cell-main">' + round2(m.mileage) + '\u00A0км</div>';
+
+          /* 5. Расходы (комиссия с дохода + амортизация + динамический список) */
+          var tdExp = document.createElement('td');
+          tdExp.className = 'align-right';
+          var breakdownRows = [];
+          if (m.commissionAmount > 0) {
+            breakdownRows.push({
+              name: 'Комиссия (' + m.commissionPct + '% с дохода)',
+              amount: m.commissionAmount
+            });
+          }
+          if (m.depreciationAmount > 0) {
+            breakdownRows.push({
+              name: 'Амортизация (' + String(round2(m.depreciationPerKm)).replace('.', ',') + ' ₽/км)',
+              amount: m.depreciationAmount
+            });
+          }
+          (shift.expenses || []).forEach(function (ex) {
+            breakdownRows.push({
+              name: ex.name,
+              amount: ex.amount
+            });
+          });
+
+          if (breakdownRows.length === 0) {
+            tdExp.innerHTML = '<span style="color:var(--text-muted)">0\u00A0₽</span>';
+          } else {
+            var tooltipSummary = breakdownRows.map(function (ex) {
+              return ex.name + ': ' + formatMoneyExact(ex.amount);
+            }).join('\n');
+
+            var isOpen = Boolean(state.historyFilter.expandedIds[shift.id]);
+            var toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'expense-toggle-btn';
+            toggleBtn.title = tooltipSummary;
+            toggleBtn.innerHTML = '<span>' + formatMoney(m.totalExpenses, false) + '</span>' +
+              '<span aria-hidden="true">' + (isOpen ? '▴' : '▾') + '</span>';
+
+            var detailsDiv = document.createElement('div');
+            detailsDiv.className = 'expense-details-list' + (isOpen ? ' open' : '');
+
+            breakdownRows.forEach(function (ex) {
+              var itemRow = document.createElement('div');
+              itemRow.className = 'expense-detail-item';
+              var sName = document.createElement('span');
+              sName.textContent = ex.name;
+              var sAmt = document.createElement('span');
+              sAmt.textContent = formatMoneyExact(ex.amount);
+              itemRow.appendChild(sName);
+              itemRow.appendChild(sAmt);
+              detailsDiv.appendChild(itemRow);
+            });
+
+            toggleBtn.addEventListener('click', function () {
+              var nextState = !state.historyFilter.expandedIds[shift.id];
+              state.historyFilter.expandedIds[shift.id] = nextState;
+              detailsDiv.classList.toggle('open', nextState);
+              toggleBtn.querySelector('span:last-child').textContent = nextState ? '▴' : '▾';
+            });
+
+            tdExp.appendChild(toggleBtn);
+            tdExp.appendChild(detailsDiv);
+          }
+
+          /* 6. Чистыми */
+          var tdNet = document.createElement('td');
+          tdNet.className = 'align-right';
+          var netClass = m.netProfit > 0 ? 'val-pos' : (m.netProfit < 0 ? 'val-neg' : '');
+          tdNet.innerHTML = '<div class="cell-main ' + netClass + '">' + formatMoney(m.netProfit, m.netProfit > 0) + '</div>';
+
+          /* 7. ₽/час */
+          var tdHourly = document.createElement('td');
+          tdHourly.className = 'align-right';
+          var hrClass = m.hourlyRate > 0 ? 'val-pos' : (m.hourlyRate < 0 ? 'val-neg' : '');
+          tdHourly.innerHTML = '<div class="cell-main ' + hrClass + '">' + formatMoney(m.hourlyRate, false) + '</div>';
+
+          /* 8. Действия */
+          var tdAct = document.createElement('td');
+          tdAct.className = 'align-right';
+          var actWrap = document.createElement('div');
+          actWrap.className = 'row-actions';
+
+          var editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'row-action-btn';
+          editBtn.title = 'Редактировать смену';
+          editBtn.setAttribute('aria-label', 'Редактировать смену');
+          editBtn.textContent = '✎';
+          editBtn.addEventListener('click', function () {
+            loadShiftForEdit(shift);
+          });
+
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'row-action-btn delete';
+          delBtn.title = 'Удалить смену';
+          delBtn.setAttribute('aria-label', 'Удалить смену');
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', function () {
+            openConfirmDialog({
+              title: 'Удалить смену?',
+              message: 'Смена за ' + formatDateHuman(shift.date, false) + ' (' + formatMoney(m.netProfit, m.netProfit > 0) + ' чистыми) будет удалена безвозвратно.',
+              confirmText: 'Удалить',
+              onConfirm: function () {
+                state.shifts = state.shifts.filter(function (s) { return s.id !== shift.id; });
+                if (state.editingShiftId === shift.id) {
+                  resetShiftForm();
+                }
+                saveShiftsToStorage(state.shifts);
+                renderHistoryTab();
+                showToast('Смена удалена');
+              }
+            });
+          });
+
+          actWrap.appendChild(editBtn);
+          actWrap.appendChild(delBtn);
+          tdAct.appendChild(actWrap);
+
+          tr.appendChild(tdDate);
+          tr.appendChild(tdHours);
+          tr.appendChild(tdIncome);
+          tr.appendChild(tdMileage);
+          tr.appendChild(tdExp);
+          tr.appendChild(tdNet);
+          tr.appendChild(tdHourly);
+          tr.appendChild(tdAct);
+
+          historyTbody.appendChild(tr);
+        });
+
+        var netSumClass = sumNet > 0 ? 'val-pos' : (sumNet < 0 ? 'val-neg' : '');
+        historySummaryLine.innerHTML =
+          '<span>Смен: <strong>' + rows.length + '</strong></span><span>·</span>' +
+          '<span>Часов: <strong>' + formatHours(sumHours) + '</strong></span><span>·</span>' +
+          '<span>Выручка: <strong>' + formatMoney(sumRevenue, false) + '</strong></span><span>·</span>' +
+          '<span>Расходы: <strong class="val-neg">' + formatMoney(sumExpenses, false) + '</strong></span><span>·</span>' +
+          '<span>Чистыми: <strong class="' + netSumClass + '">' + formatMoney(sumNet, sumNet > 0) + '</strong></span>';
+      }
+
+      function csvEscape(val) {
+        var str = String(val == null ? '' : val);
+        if (str.indexOf(';') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }
+
+      function exportVisibleHistoryCSV() {
+        var rows = getFilteredHistoryShifts();
+        if (rows.length === 0) {
+          showToast('Нет видимых смен для экспорта в CSV', 'warn');
+          return;
+        }
+
+        var headers = [
+          'Дата',
+          'Интервалы',
+          'Часы',
+          'Доход (₽)',
+          'Комиссия (%)',
+          'Комиссия с дохода (₽)',
+          'Чаевые (₽)',
+          'Выручка с чаевыми (₽)',
+          'Пробег (км)',
+          'Амортизация (₽/км)',
+          'Амортизация (₽)',
+          'Расходы по списку (₽)',
+          'Итого расходов (₽)',
+          'Детализация расходов',
+          'Чистая прибыль (₽)',
+          'Прибыль в час (₽/ч)',
+          'Заметки'
+        ];
+
+        var lines = [headers.map(csvEscape).join(';')];
+
+        rows.forEach(function (shift) {
+          var m = computeShiftMetrics(shift);
+          var intervalsStr = (shift.intervals || []).map(function (it) { return it.start + '-' + it.end; }).join(', ');
+          var expensesStr = (shift.expenses || []).map(function (ex) { return ex.name + ': ' + ex.amount; }).join(', ');
+
+          lines.push([
+            shift.date,
+            intervalsStr,
+            round2(m.totalHours).toString().replace('.', ','),
+            round2(m.gross).toString().replace('.', ','),
+            round2(m.commissionPct).toString().replace('.', ','),
+            round2(m.commissionAmount).toString().replace('.', ','),
+            round2(m.tips).toString().replace('.', ','),
+            round2(m.revenue).toString().replace('.', ','),
+            round2(m.mileage).toString().replace('.', ','),
+            round2(m.depreciationPerKm).toString().replace('.', ','),
+            round2(m.depreciationAmount).toString().replace('.', ','),
+            round2(m.listExpenses).toString().replace('.', ','),
+            round2(m.totalExpenses).toString().replace('.', ','),
+            expensesStr,
+            round2(m.netProfit).toString().replace('.', ','),
+            round2(m.hourlyRate).toString().replace('.', ','),
+            shift.notes || ''
+          ].map(csvEscape).join(';'));
+        });
+
+        var csvContent = '\uFEFF' + lines.join('\r\n');
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'smeny_taksi_' + getLocalISODate(new Date()) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showToast('Файл CSV скачан (' + rows.length + ' смен)', 'success');
+      }
+
+      document.getElementById('export-csv-btn').addEventListener('click', exportVisibleHistoryCSV);
+
+      /* ==================== TAB 3: АНАЛИЗ & CANVAS CHARTS ==================== */
+      var customRangeRow = document.getElementById('analytics-custom-range');
+      var analyticsFromBtn = document.getElementById('analytics-from-btn');
+      var analyticsFromText = document.getElementById('analytics-from-text');
+      var analyticsToBtn = document.getElementById('analytics-to-btn');
+      var analyticsToText = document.getElementById('analytics-to-text');
+
+      var canvasDaily = document.getElementById('chart-daily');
+      var canvasWeekdays = document.getElementById('chart-weekdays');
+      var canvasExpenses = document.getElementById('chart-expenses');
+
+      var chartHitboxes = {
+        daily: [],
+        weekdays: [],
+        expenses: []
+      };
+
+      document.querySelector('[aria-label="Период анализа"]').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-period]');
+        if (!btn) return;
+        var p = btn.getAttribute('data-period');
+        state.analytics.period = p;
+        state.analytics.hoverDailyIdx = -1;
+        state.analytics.hoverWeekdayIdx = -1;
+        state.analytics.hoverExpenseIdx = -1;
+        document.getElementById('readout-daily').textContent =
+          'Наведите или нажмите на столбец для просмотра точных сумм за день';
+        document.getElementById('readout-weekdays').textContent =
+          'Средняя чистая прибыль за смену по дням недели';
+        document.getElementById('readout-expenses').textContent =
+          'Топ категорий расходов за выбранный период';
+
+        var allBtns = this.querySelectorAll('.seg-btn');
+        for (var i = 0; i < allBtns.length; i++) {
+          allBtns[i].classList.toggle('active', allBtns[i] === btn);
+        }
+
+        if (p === 'custom' && !state.analytics.customFrom && !state.analytics.customTo) {
+          var today = getLocalISODate(new Date());
+          state.analytics.customFrom = addDaysISO(today, -13);
+          state.analytics.customTo = today;
+        }
+        customRangeRow.classList.toggle('visible', p === 'custom');
+        renderAnalyticsTab();
+      });
+
+      analyticsFromBtn.addEventListener('click', function () {
+        openDatePicker({
+          title: 'Анализ: дата от',
+          value: state.analytics.customFrom,
+          allowClear: true,
+          onSelect: function (iso) {
+            state.analytics.customFrom = iso;
+            if (iso && state.analytics.customTo && state.analytics.customTo < iso) {
+              state.analytics.customTo = iso;
+            }
+            renderAnalyticsTab();
+          }
+        });
+      });
+
+      analyticsToBtn.addEventListener('click', function () {
+        openDatePicker({
+          title: 'Анализ: дата до',
+          value: state.analytics.customTo,
+          allowClear: true,
+          onSelect: function (iso) {
+            state.analytics.customTo = iso;
+            if (iso && state.analytics.customFrom && state.analytics.customFrom > iso) {
+              state.analytics.customFrom = iso;
+            }
+            renderAnalyticsTab();
+          }
+        });
+      });
+
+      function getAnalyticsFilteredShifts() {
+        var p = state.analytics.period;
+        var today = getLocalISODate(new Date());
+        var from = '';
+        var to = '';
+
+        if (p === '7d') {
+          from = addDaysISO(today, -6);
+          to = today;
+        } else if (p === '30d') {
+          from = addDaysISO(today, -29);
+          to = today;
+        } else if (p === 'custom') {
+          from = state.analytics.customFrom;
+          to = state.analytics.customTo;
+        }
+
+        return state.shifts.filter(function (s) {
+          if (from && s.date < from) return false;
+          if (to && s.date > to) return false;
+          return true;
+        });
+      }
+
+      function setupHiDPICanvas(canvas, cssHeight) {
+        var dpr = window.devicePixelRatio || 1;
+        var rectWidth = canvas.parentElement.clientWidth || 320;
+        canvas.style.height = cssHeight + 'px';
+        canvas.width = Math.round(rectWidth * dpr);
+        canvas.height = Math.round(cssHeight * dpr);
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx: ctx, width: rectWidth, height: cssHeight };
+      }
+
+      function drawRoundedRect(ctx, x, y, w, h, r) {
+        if (w <= 0 || h <= 0) return;
+        var radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawEmptyCanvasState(canvas, cssHeight, text) {
+        var setup = setupHiDPICanvas(canvas, cssHeight);
+        var ctx = setup.ctx;
+        ctx.clearRect(0, 0, setup.width, setup.height);
+        ctx.fillStyle = '#12171e';
+        drawRoundedRect(ctx, 0, 0, setup.width, setup.height, 12);
+        ctx.fillStyle = '#8b95a3';
+        ctx.font = '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, setup.width / 2, setup.height / 2);
+      }
+
+      function formatAxisCompact(val) {
+        var abs = Math.abs(val);
+        var sign = val < 0 ? '−' : '';
+        if (abs >= 1000) {
+          var k = Math.round((abs / 1000) * 10) / 10;
+          return sign + String(k).replace('.', ',') + 'к';
+        }
+        return sign + String(Math.round(abs));
+      }
+
+      /* Chart 1: Daily Dynamics (Gray = Revenue, Green/Red = Net Profit) */
+      function renderDailyChart(dailyItems) {
+        chartHitboxes.daily = [];
+        if (dailyItems.length === 0) {
+          drawEmptyCanvasState(canvasDaily, 240, 'Нет данных за выбранный период');
+          return;
+        }
+
+        var setup = setupHiDPICanvas(canvasDaily, 270);
+        var ctx = setup.ctx;
+        var W = setup.width;
+        var H = setup.height;
+        ctx.clearRect(0, 0, W, H);
+
+        var padLeft = 48;
+        var padRight = 14;
+        var padTop = 18;
+        var padBottom = 34;
+        var plotW = W - padLeft - padRight;
+        var plotH = H - padTop - padBottom;
+
+        var maxVal = 0;
+        var minVal = 0;
+        for (var i = 0; i < dailyItems.length; i++) {
+          if (dailyItems[i].revenue > maxVal) maxVal = dailyItems[i].revenue;
+          if (dailyItems[i].net > maxVal) maxVal = dailyItems[i].net;
+          if (dailyItems[i].net < minVal) minVal = dailyItems[i].net;
+        }
+        if (maxVal === 0 && minVal === 0) maxVal = 1000;
+        maxVal = maxVal * 1.12;
+        if (minVal < 0) minVal = minVal * 1.15;
+
+        var totalSpan = maxVal - minVal;
+        var zeroY = padTop + (maxVal / totalSpan) * plotH;
+
+        /* Grid lines */
+        var steps = 4;
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        for (var g = 0; g <= steps; g++) {
+          var ratio = g / steps;
+          var valAtLine = maxVal - ratio * totalSpan;
+          var gy = padTop + ratio * plotH;
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(padLeft, gy);
+          ctx.lineTo(W - padRight, gy);
+          ctx.stroke();
+
+          ctx.fillStyle = '#8b95a3';
+          ctx.fillText(formatAxisCompact(valAtLine), padLeft - 8, gy);
+        }
+
+        /* Zero baseline emphasis */
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.beginPath();
+        ctx.moveTo(padLeft, zeroY);
+        ctx.lineTo(W - padRight, zeroY);
+        ctx.stroke();
+
+        var count = dailyItems.length;
+        var slotW = plotW / count;
+        var barW = Math.max(8, Math.min(44, slotW * 0.64));
+        var innerW = Math.max(6, barW * 0.68);
+        var labelStride = Math.max(1, Math.ceil(count / Math.floor(plotW / 46)));
+
+        for (var idx = 0; idx < count; idx++) {
+          var item = dailyItems[idx];
+          var cx = padLeft + idx * slotW + slotW / 2;
+          var bx = cx - barW / 2;
+
+          /* Hover highlight column */
+          if (state.analytics.hoverDailyIdx === idx) {
+            ctx.fillStyle = 'rgba(255, 212, 59, 0.08)';
+            drawRoundedRect(ctx, padLeft + idx * slotW + 1, padTop, slotW - 2, plotH, 6);
+          }
+
+          /* Gray Revenue Bar */
+          var revH = (item.revenue / totalSpan) * plotH;
+          if (revH > 0) {
+            ctx.fillStyle = '#3d4959';
+            drawRoundedRect(ctx, bx, zeroY - revH, barW, revH, 5);
+          }
+
+          /* Overlaid Net Profit Bar (Green above 0, Red below 0) */
+          var ix = cx - innerW / 2;
+          if (item.net >= 0) {
+            var netH = (item.net / totalSpan) * plotH;
+            if (netH > 0) {
+              ctx.fillStyle = '#51cf66';
+              drawRoundedRect(ctx, ix, zeroY - netH, innerW, netH, 4);
+            }
+          } else {
+            var lossH = (Math.abs(item.net) / totalSpan) * plotH;
+            ctx.fillStyle = '#ff6b6b';
+            drawRoundedRect(ctx, ix, zeroY, innerW, lossH, 4);
+          }
+
+          /* X-Axis Date Label */
+          if (idx % labelStride === 0 || idx === count - 1) {
+            ctx.fillStyle = state.analytics.hoverDailyIdx === idx ? '#ffd43b' : '#8b95a3';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(formatDateShortChart(item.date), cx, H - padBottom + 9);
+          }
+
+          chartHitboxes.daily.push({
+            x: padLeft + idx * slotW,
+            y: padTop,
+            w: slotW,
+            h: plotH,
+            item: item,
+            idx: idx
+          });
+        }
+      }
+
+      /* Chart 2: Weekday Efficiency */
+      function renderWeekdaysChart(weekdayStats) {
+        chartHitboxes.weekdays = [];
+        var hasAny = weekdayStats.some(function (w) { return w.shifts > 0; });
+        if (!hasAny) {
+          document.getElementById('best-weekday-label').textContent = '—';
+          drawEmptyCanvasState(canvasWeekdays, 240, 'Недостаточно данных по дням недели');
+          return;
+        }
+
+        var bestIdx = -1;
+        var bestAvg = -Infinity;
+        var maxVal = 0;
+        var minVal = 0;
+
+        for (var i = 0; i < 7; i++) {
+          var w = weekdayStats[i];
+          if (w.shifts > 0 && w.avgNet > bestAvg) {
+            bestAvg = w.avgNet;
+            bestIdx = i;
+          }
+          if (w.avgNet > maxVal) maxVal = w.avgNet;
+          if (w.avgNet < minVal) minVal = w.avgNet;
+        }
+
+        var bestLabelEl = document.getElementById('best-weekday-label');
+        if (bestIdx !== -1) {
+          bestLabelEl.textContent = 'Лидер: ' + WEEKDAYS_SHORT_MON[bestIdx] + ' (' + formatMoney(bestAvg, bestAvg > 0) + ')';
+        } else {
+          bestLabelEl.textContent = '—';
+        }
+
+        if (maxVal === 0 && minVal === 0) maxVal = 1000;
+        maxVal = maxVal * 1.2;
+        if (minVal < 0) minVal = minVal * 1.2;
+
+        var setup = setupHiDPICanvas(canvasWeekdays, 250);
+        var ctx = setup.ctx;
+        var W = setup.width;
+        var H = setup.height;
+        ctx.clearRect(0, 0, W, H);
+
+        var padLeft = 44;
+        var padRight = 12;
+        var padTop = 24;
+        var padBottom = 32;
+        var plotW = W - padLeft - padRight;
+        var plotH = H - padTop - padBottom;
+        var span = maxVal - minVal;
+        var zeroY = padTop + (maxVal / span) * plotH;
+
+        /* Grid lines */
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (var g = 0; g <= 3; g++) {
+          var r = g / 3;
+          var gy = padTop + r * plotH;
+          var gv = maxVal - r * span;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          ctx.beginPath();
+          ctx.moveTo(padLeft, gy);
+          ctx.lineTo(W - padRight, gy);
+          ctx.stroke();
+          ctx.fillStyle = '#8b95a3';
+          ctx.fillText(formatAxisCompact(gv), padLeft - 6, gy);
+        }
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.beginPath();
+        ctx.moveTo(padLeft, zeroY);
+        ctx.lineTo(W - padRight, zeroY);
+        ctx.stroke();
+
+        var slotW = plotW / 7;
+        var barW = Math.max(14, Math.min(36, slotW * 0.6));
+
+        for (var d = 0; d < 7; d++) {
+          var stat = weekdayStats[d];
+          var cx = padLeft + d * slotW + slotW / 2;
+          var bx = cx - barW / 2;
+
+          if (state.analytics.hoverWeekdayIdx === d) {
+            ctx.fillStyle = 'rgba(255, 212, 59, 0.08)';
+            drawRoundedRect(ctx, padLeft + d * slotW + 2, padTop, slotW - 4, plotH, 6);
+          }
+
+          if (stat.shifts > 0) {
+            if (stat.avgNet >= 0) {
+              var bh = Math.max(3, (stat.avgNet / span) * plotH);
+              ctx.fillStyle = d === bestIdx ? '#ffd43b' : '#51cf66';
+              drawRoundedRect(ctx, bx, zeroY - bh, barW, bh, 5);
+
+              ctx.fillStyle = d === bestIdx ? '#ffd43b' : '#e6e6e6';
+              ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(formatAxisCompact(stat.avgNet), cx, zeroY - bh - 4);
+            } else {
+              var lh = Math.max(3, (Math.abs(stat.avgNet) / span) * plotH);
+              ctx.fillStyle = '#ff6b6b';
+              drawRoundedRect(ctx, bx, zeroY, barW, lh, 5);
+            }
+          } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            drawRoundedRect(ctx, bx, zeroY - 4, barW, 4, 2);
+          }
+
+          ctx.fillStyle = d === bestIdx ? '#ffd43b' : '#8b95a3';
+          ctx.font = (d === bestIdx ? '700 ' : '500 ') + '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(WEEKDAYS_SHORT_MON[d], cx, H - padBottom + 8);
+
+          chartHitboxes.weekdays.push({
+            x: padLeft + d * slotW,
+            y: padTop,
+            w: slotW,
+            h: plotH,
+            stat: stat,
+            idx: d
+          });
+        }
+      }
+
+      /* Chart 3: Horizontal Histogram of Expenses */
+      function renderExpensesChart(categories, totalSum) {
+        chartHitboxes.expenses = [];
+        document.getElementById('total-exp-chart-label').textContent = formatMoney(totalSum, false);
+
+        if (categories.length === 0 || totalSum <= 0) {
+          drawEmptyCanvasState(canvasExpenses, 240, 'Расходы за выбранный период отсутствуют');
+          return;
+        }
+
+        var rowH = 44;
+        var dynamicHeight = Math.max(220, categories.length * rowH + 20);
+        var setup = setupHiDPICanvas(canvasExpenses, dynamicHeight);
+        var ctx = setup.ctx;
+        var W = setup.width;
+        var H = setup.height;
+        ctx.clearRect(0, 0, W, H);
+
+        var maxCat = categories[0].amount || 1;
+        var padX = 6;
+
+        for (var i = 0; i < categories.length; i++) {
+          var cat = categories[i];
+          var yTop = 8 + i * rowH;
+          var pct = Math.round((cat.amount / totalSum) * 100);
+
+          if (state.analytics.hoverExpenseIdx === i) {
+            ctx.fillStyle = 'rgba(255, 107, 107, 0.08)';
+            drawRoundedRect(ctx, 0, yTop - 3, W, rowH - 2, 8);
+          }
+
+          /* Top label line: Category Name on left, Amount + % on right */
+          ctx.font = '500 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.fillStyle = '#e6e6e6';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          var displayName = cat.name.length > 26 ? cat.name.slice(0, 25) + '…' : cat.name;
+          ctx.fillText(displayName, padX, yTop);
+
+          ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.fillStyle = '#8b95a3';
+          ctx.textAlign = 'right';
+          ctx.fillText(formatMoney(cat.amount, false) + ' (' + pct + '%)', W - padX, yTop);
+
+          /* Track + Red Bar */
+          var barY = yTop + 20;
+          var trackW = W - padX * 2;
+          ctx.fillStyle = '#12171e';
+          drawRoundedRect(ctx, padX, barY, trackW, 11, 5);
+
+          var fillW = Math.max(6, (cat.amount / maxCat) * trackW);
+          ctx.fillStyle = '#ff6b6b';
+          drawRoundedRect(ctx, padX, barY, fillW, 11, 5);
+
+          chartHitboxes.expenses.push({
+            x: 0,
+            y: yTop - 2,
+            w: W,
+            h: rowH,
+            cat: cat,
+            pct: pct,
+            idx: i
+          });
+        }
+      }
+
+      function renderAnalyticsTab() {
+        /* Sync custom date buttons */
+        var cf = state.analytics.customFrom;
+        var ct = state.analytics.customTo;
+        analyticsFromText.textContent = cf ? formatDateHuman(cf, false) : 'Начало';
+        analyticsFromBtn.classList.toggle('empty-val', !cf);
+        analyticsToText.textContent = ct ? formatDateHuman(ct, false) : 'Конец';
+        analyticsToBtn.classList.toggle('empty-val', !ct);
+
+        var filtered = getAnalyticsFilteredShifts();
+
+        var totalShifts = filtered.length;
+        var totalHours = 0;
+        var totalRevenue = 0;
+        var totalExpenses = 0;
+        var totalNet = 0;
+        var totalMileage = 0;
+
+        var byDateMap = {};
+        var weekdayAcc = [];
+        for (var w = 0; w < 7; w++) {
+          weekdayAcc.push({ shifts: 0, netSum: 0, hoursSum: 0, avgNet: 0 });
+        }
+        var expCatMap = {};
+
+        filtered.forEach(function (shift) {
+          var m = computeShiftMetrics(shift);
+          totalHours += m.totalHours;
+          totalRevenue += m.revenue;
+          totalExpenses += m.totalExpenses;
+          totalNet += m.netProfit;
+          totalMileage += m.mileage;
+
+          if (!byDateMap[shift.date]) {
+            byDateMap[shift.date] = { date: shift.date, revenue: 0, expenses: 0, net: 0, hours: 0 };
+          }
+          byDateMap[shift.date].revenue += m.revenue;
+          byDateMap[shift.date].expenses += m.totalExpenses;
+          byDateMap[shift.date].net += m.netProfit;
+          byDateMap[shift.date].hours += m.totalHours;
+
+          var wdIdx = getWeekdayMonIdx(shift.date);
+          weekdayAcc[wdIdx].shifts += 1;
+          weekdayAcc[wdIdx].netSum += m.netProfit;
+          weekdayAcc[wdIdx].hoursSum += m.totalHours;
+
+          if (m.commissionAmount > 0) {
+            if (!expCatMap['комиссия']) {
+              expCatMap['комиссия'] = {
+                name: 'Комиссия (с дохода)',
+                amount: 0,
+                count: 0
+              };
+            }
+            expCatMap['комиссия'].amount += m.commissionAmount;
+            expCatMap['комиссия'].count += 1;
+          }
+
+          if (m.depreciationAmount > 0) {
+            if (!expCatMap['амортизация']) {
+              expCatMap['амортизация'] = {
+                name: 'Амортизация',
+                amount: 0,
+                count: 0
+              };
+            }
+            expCatMap['амортизация'].amount += m.depreciationAmount;
+            expCatMap['амортизация'].count += 1;
+          }
+
+          (shift.expenses || []).forEach(function (ex) {
+            var amt = Math.max(0, parseNum(ex.amount));
+            if (amt <= 0) return;
+            var rawName = String(ex.name || 'Прочее').trim() || 'Прочее';
+            var normKey = rawName.toLowerCase();
+            if (!expCatMap[normKey]) {
+              expCatMap[normKey] = {
+                name: rawName.charAt(0).toUpperCase() + rawName.slice(1),
+                amount: 0,
+                count: 0
+              };
+            }
+            expCatMap[normKey].amount += amt;
+            expCatMap[normKey].count += 1;
+          });
+        });
+
+        for (var k = 0; k < 7; k++) {
+          if (weekdayAcc[k].shifts > 0) {
+            weekdayAcc[k].avgNet = weekdayAcc[k].netSum / weekdayAcc[k].shifts;
+          }
+        }
+
+        var dailyItems = Object.keys(byDateMap)
+          .sort()
+          .map(function (dKey) { return byDateMap[dKey]; });
+
+        var workedDaysCount = dailyItems.length;
+        var avgRevPerDay = workedDaysCount > 0 ? totalRevenue / workedDaysCount : 0;
+        var avgHourly = totalHours > 0 ? totalNet / totalHours : 0;
+        var avgHoursPerShift = totalShifts > 0 ? totalHours / totalShifts : 0;
+        var netPerKm = totalMileage > 0 ? totalNet / totalMileage : 0;
+
+        /* Update 5 KPI cards */
+        document.getElementById('kpi-shifts').textContent = String(totalShifts);
+        document.getElementById('kpi-mileage-sub').textContent = 'Пробег: ' + Math.round(totalMileage) + ' км';
+
+        document.getElementById('kpi-hours').textContent = formatHours(totalHours);
+        document.getElementById('kpi-hours-sub').textContent = 'В среднем: ' + formatHours(avgHoursPerShift) + '/смена';
+
+        document.getElementById('kpi-avg-rev').textContent = formatMoney(avgRevPerDay, false);
+        document.getElementById('kpi-rev-sub').textContent = 'Всего выручка: ' + formatMoney(totalRevenue, false);
+
+        var kpiNetEl = document.getElementById('kpi-net-total');
+        kpiNetEl.textContent = formatMoney(totalNet, totalNet > 0);
+        kpiNetEl.className = 'kpi-value num ' + (totalNet > 0 ? 'val-pos' : (totalNet < 0 ? 'val-neg' : ''));
+        document.getElementById('kpi-exp-sub').textContent = 'Расходы: ' + formatMoney(totalExpenses, false);
+
+        var kpiHourlyEl = document.getElementById('kpi-hourly-avg');
+        kpiHourlyEl.textContent = formatMoney(avgHourly, false) + '/ч';
+        kpiHourlyEl.className = 'kpi-value num ' + (avgHourly < 0 ? 'val-neg' : 'val-yellow');
+        document.getElementById('kpi-km-net-sub').textContent = 'Чистыми на км: ' + formatMoneyExact(netPerKm) + '/км';
+
+        /* Sort top expense categories */
+        var expList = Object.keys(expCatMap)
+          .map(function (key) { return expCatMap[key]; })
+          .sort(function (a, b) { return b.amount - a.amount; });
+
+        if (expList.length > 8) {
+          var top7 = expList.slice(0, 7);
+          var restSum = 0;
+          var restCount = 0;
+          for (var r = 7; r < expList.length; r++) {
+            restSum += expList[r].amount;
+            restCount += expList[r].count;
+          }
+          top7.push({ name: 'Прочие расходы', amount: restSum, count: restCount });
+          expList = top7;
+        }
+
+        renderDailyChart(dailyItems);
+        renderWeekdaysChart(weekdayAcc);
+        renderExpensesChart(expList, totalExpenses);
+      }
+
+      /* Interactive Canvas Pointer Inspection */
+      function attachCanvasInspection(canvas, getBoxes, onHit, onClear) {
+        function handlePointer(e) {
+          var rect = canvas.getBoundingClientRect();
+          var clientX = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
+          var clientY = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
+          var x = clientX - rect.left;
+          var y = clientY - rect.top;
+          var boxes = getBoxes();
+          for (var i = 0; i < boxes.length; i++) {
+            var b = boxes[i];
+            if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+              onHit(b);
+              return;
+            }
+          }
+          onClear();
+        }
+
+        canvas.addEventListener('mousemove', handlePointer);
+        canvas.addEventListener('click', handlePointer);
+        canvas.addEventListener('mouseleave', onClear);
+      }
+
+      attachCanvasInspection(
+        canvasDaily,
+        function () { return chartHitboxes.daily; },
+        function (hit) {
+          if (state.analytics.hoverDailyIdx !== hit.idx) {
+            state.analytics.hoverDailyIdx = hit.idx;
+            var it = hit.item;
+            document.getElementById('readout-daily').textContent =
+              formatDateHuman(it.date, false) + ' (' + WEEKDAYS_SHORT_MON[getWeekdayMonIdx(it.date)] + '): Выручка ' +
+              formatMoney(it.revenue, false) + ' · Расходы ' + formatMoney(it.expenses, false) +
+              ' · Чистыми ' + formatMoney(it.net, it.net > 0);
+            renderAnalyticsTab();
+          }
+        },
+        function () {
+          if (state.analytics.hoverDailyIdx !== -1) {
+            state.analytics.hoverDailyIdx = -1;
+            document.getElementById('readout-daily').textContent =
+              'Наведите или нажмите на столбец для просмотра точных сумм за день';
+            renderAnalyticsTab();
+          }
+        }
+      );
+
+      attachCanvasInspection(
+        canvasWeekdays,
+        function () { return chartHitboxes.weekdays; },
+        function (hit) {
+          if (state.analytics.hoverWeekdayIdx !== hit.idx) {
+            state.analytics.hoverWeekdayIdx = hit.idx;
+            var st = hit.stat;
+            if (st.shifts > 0) {
+              document.getElementById('readout-weekdays').textContent =
+                WEEKDAYS_FULL_MON[hit.idx] + ': смен ' + st.shifts +
+                ' · средняя чистая ' + formatMoney(st.avgNet, st.avgNet > 0);
+            } else {
+              document.getElementById('readout-weekdays').textContent =
+                WEEKDAYS_FULL_MON[hit.idx] + ': нет смен за выбранный период';
+            }
+            renderAnalyticsTab();
+          }
+        },
+        function () {
+          if (state.analytics.hoverWeekdayIdx !== -1) {
+            state.analytics.hoverWeekdayIdx = -1;
+            document.getElementById('readout-weekdays').textContent =
+              'Средняя чистая прибыль за смену по дням недели';
+            renderAnalyticsTab();
+          }
+        }
+      );
+
+      attachCanvasInspection(
+        canvasExpenses,
+        function () { return chartHitboxes.expenses; },
+        function (hit) {
+          if (state.analytics.hoverExpenseIdx !== hit.idx) {
+            state.analytics.hoverExpenseIdx = hit.idx;
+            document.getElementById('readout-expenses').textContent =
+              hit.cat.name + ': ' + formatMoneyExact(hit.cat.amount) +
+              ' (' + hit.pct + '% от всех расходов, записей: ' + hit.cat.count + ')';
+            renderAnalyticsTab();
+          }
+        },
+        function () {
+          if (state.analytics.hoverExpenseIdx !== -1) {
+            state.analytics.hoverExpenseIdx = -1;
+            document.getElementById('readout-expenses').textContent =
+              'Топ категорий расходов за выбранный период';
+            renderAnalyticsTab();
+          }
+        }
+      );
+
+      window.addEventListener('resize', function () {
+        if (state.activeTab === 'analytics') {
+          renderAnalyticsTab();
+        }
+      });
+
+      /* ==================== TAB 4: НАСТРОЙКИ LOGIC ==================== */
+      var setCommInput = document.getElementById('set-commission');
+      var setDeprInput = document.getElementById('set-depreciation');
+
+      function renderSettingsTab() {
+        var s = state.settings;
+        setCommInput.value = String(s.commissionPct);
+        setDeprInput.value = String(s.depreciationPerKm);
+      }
+
+      document.getElementById('settings-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        state.settings = {
+          commissionPct: round2(Math.max(0, parseNum(setCommInput.value))),
+          depreciationPerKm: round2(Math.max(0, parseNum(setDeprInput.value)))
+        };
+        saveSettingsToStorage(state.settings);
+        if (!state.editingShiftId) {
+          state.draft.commissionPct = state.settings.commissionPct;
+          state.draft.depreciationPerKm = state.settings.depreciationPerKm;
+          inputCommissionPct.value = String(state.settings.commissionPct);
+          inputDepreciationRate.value = String(state.settings.depreciationPerKm);
+          updateLivePreview();
+        }
+        showToast('Настройки сохранены', 'success');
+      });
+
+      document.getElementById('reset-defaults-btn').addEventListener('click', function () {
+        state.settings = Object.assign({}, DEFAULT_SETTINGS);
+        saveSettingsToStorage(state.settings);
+        if (!state.editingShiftId) {
+          state.draft.commissionPct = state.settings.commissionPct;
+          state.draft.depreciationPerKm = state.settings.depreciationPerKm;
+          inputCommissionPct.value = String(state.settings.commissionPct);
+          inputDepreciationRate.value = String(state.settings.depreciationPerKm);
+          updateLivePreview();
+        }
+        renderSettingsTab();
+        showToast('Восстановлены стандартные настройки');
+      });
+
+      /* Standalone HTML & Backup JSON Export / Import / Demo / Clear */
+      document.getElementById('download-html-btn').addEventListener('click', function () {
+        var clone = document.documentElement.cloneNode(true);
+        var viteScripts = clone.querySelectorAll('script[type="module"][src*="@vite"]');
+        for (var i = 0; i < viteScripts.length; i++) {
+          if (viteScripts[i].parentNode) viteScripts[i].parentNode.removeChild(viteScripts[i]);
+        }
+        var toastBox = clone.querySelector('#toast-container');
+        if (toastBox) toastBox.innerHTML = '';
+        var htmlSource = '<!doctype html>\n' + clone.outerHTML;
+        var blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showToast('Автономный файл index.html скачан', 'success');
+      });
+
+      document.getElementById('backup-export-btn').addEventListener('click', function () {
+        var payload = {
+          exportedAt: new Date().toISOString(),
+          settings: state.settings,
+          shifts: state.shifts
+        };
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'taxi_backup_' + getLocalISODate(new Date()) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        showToast('Резервная копия JSON сохранена', 'success');
+      });
+
+      var backupFileInput = document.getElementById('backup-file-input');
+      document.getElementById('backup-import-btn').addEventListener('click', function () {
+        backupFileInput.value = '';
+        backupFileInput.click();
+      });
+
+      backupFileInput.addEventListener('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+          try {
+            var data = JSON.parse(String(ev.target.result));
+            var importedShifts = Array.isArray(data) ? data : data.shifts;
+            if (!Array.isArray(importedShifts)) {
+              showToast('Неверный формат файла резервной копии', 'warn');
+              return;
+            }
+            state.shifts = importedShifts;
+            saveShiftsToStorage(state.shifts);
+            if (data.settings && typeof data.settings === 'object') {
+              var impDepr = isFinite(Number(data.settings.depreciationPerKm))
+                ? Number(data.settings.depreciationPerKm)
+                : (isFinite(Number(data.settings.depreciationRate)) ? Number(data.settings.depreciationRate) : state.settings.depreciationPerKm);
+              state.settings = {
+                commissionPct: isFinite(Number(data.settings.commissionPct)) ? Number(data.settings.commissionPct) : state.settings.commissionPct,
+                depreciationPerKm: impDepr
+              };
+              saveSettingsToStorage(state.settings);
+              renderSettingsTab();
+            }
+            showToast('Импортировано смен: ' + importedShifts.length, 'success');
+          } catch (err) {
+            showToast('Не удалось прочитать JSON-файл', 'warn');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('seed-demo-btn').addEventListener('click', function () {
+        var demo = buildDemoShifts(state.settings.commissionPct, state.settings.depreciationPerKm);
+        state.shifts = demo.concat(state.shifts);
+        saveShiftsToStorage(state.shifts);
+        showToast('Добавлено 7 демонстрационных смен', 'success');
+      });
+
+      document.getElementById('clear-all-shifts-btn').addEventListener('click', function () {
+        if (state.shifts.length === 0) {
+          showToast('Журнал смен уже пуст');
+          return;
+        }
+        openConfirmDialog({
+          title: 'Очистить все смены?',
+          message: 'Все сохранённые смены (' + state.shifts.length + ' шт.) будут удалены из памяти браузера. Настройки калькулятора останутся.',
+          confirmText: 'Очистить всё',
+          onConfirm: function () {
+            state.shifts = [];
+            saveShiftsToStorage(state.shifts);
+            resetShiftForm();
+            showToast('Все смены удалены');
+          }
+        });
+      });
+
+      /* ==================== INITIALIZATION ==================== */
+      initTimePickerColumns();
+      syncDraftToFormUI();
+    })();
+  </script>
+</body>
+</html>
